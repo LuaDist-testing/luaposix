@@ -1,6 +1,6 @@
 /*
- * POSIX library for Lua 5.1/5.2.
- * (c) Gary V. Vaughan <gary@vaughan.pe>, 2013-2014
+ * POSIX library for Lua 5.1, 5.2 & 5.3.
+ * (c) Gary V. Vaughan <gary@vaughan.pe>, 2013-2015
  * (c) Reuben Thomas <rrt@sc3d.org> 2010-2013
  * (c) Natanael Copa <natanael.copa@gmail.com> 2008-2010
  * Clean up and bug fixes by Leo Razoumov <slonik.az@gmail.com> 2006-10-11
@@ -37,8 +37,8 @@ pushtimeval(lua_State *L, struct timeval *tv)
 		return lua_pushnil(L), 1;
 
 	lua_createtable(L, 0, 2);
-	setnumberfield(tv, tv_sec);
-	setnumberfield(tv, tv_usec);
+	setintegerfield(tv, tv_sec);
+	setintegerfield(tv, tv_usec);
 
 	settypemetatable("PosixTimeval");
 	return 1;

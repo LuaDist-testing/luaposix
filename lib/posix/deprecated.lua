@@ -1,6 +1,6 @@
 --[[
- POSIX library for Lua 5.1/5.2.
- (c) Gary V. Vaughan <gary@vaughan.pe>, 2014
+ POSIX library for Lua 5.1, 5.2 & 5.3.
+ (c) Gary V. Vaughan <gary@vaughan.pe>, 2014-2015
 ]]
 --[[--
  Legacy Lua POSIX bindings.
@@ -11,7 +11,12 @@
 ]]
 
 local _argcheck = require "posix._argcheck"
-local bit       = bit32 or require "bit"
+local bit       = require "posix.bit32"
+
+-- Lua 5.3 has table.unpack but not _G.unpack
+-- Lua 5.2 has table.unpack and _G.unpack
+-- Lua 5.1 has _G.unpack but not table.unpack
+local unpack = table.unpack or unpack
 
 local argerror, argtypeerror, badoption =
   _argcheck.argerror, _argcheck.argtypeerror, _argcheck.badoption
@@ -251,7 +256,7 @@ if _DEBUG ~= false then
   M.exec = function (...)
     local argt = {...}
     checkstring ("exec", 1, argt[1])
-    if type (argt[2]) ~= "table" and type (argt[2]) ~= "string" then
+    if type (argt[2]) ~= "table" and type (argt[2]) ~= "string" and type (argt[2]) ~= "nil" then
       argtypeerror ("exec", 2, "string, table or nil", argt[2])
     end
     if #argt > 2 then
@@ -294,7 +299,7 @@ if _DEBUG ~= false then
   M.execp = function (...)
     local argt = {...}
     checkstring ("execp", 1, argt[1])
-    if type (argt[2]) ~= "table" and type (argt[2]) ~= "string" then
+    if type (argt[2]) ~= "table" and type (argt[2]) ~= "string" and type (argt[2]) ~= "nil" then
       argtypeerror ("execp", 2, "string, table or nil", argt[2])
     end
     if #argt > 2 then
@@ -743,7 +748,7 @@ end
 --   `LOG_LOCAL0` through `LOG_LOCAL7`
 -- @see syslog(3)
 
-local bit = bit32 or require "bit"
+local bit = require "posix.bit32"
 local log = require "posix.syslog"
 
 local bor = bit.bor
@@ -927,7 +932,8 @@ local _stat = st.lstat  -- for bugwards compatibility with v<=32
 
 local function stat (path, ...)
   local info = _stat (path)
-  return doselection ("stat", 1, {...}, {
+  if info ~= nil then
+    return doselection ("stat", 1, {...}, {
       dev   = info.st_dev,
       ino   = info.st_ino,
       mode  = pushmode (info.st_mode),
@@ -939,7 +945,8 @@ local function stat (path, ...)
       mtime = info.st_mtime,
       ctime = info.st_ctime,
       type  = filetype (info.st_mode),
-  })
+    })
+  end
 end
 
 if _DEBUG ~= false then
@@ -971,7 +978,8 @@ local _statvfs = sv.statvfs
 
 local function statvfs (path, ...)
   local info = _statvfs (path)
-  return doselection ("statvfs", 1, {...}, {
+  if info ~= nil then
+    return doselection ("statvfs", 1, {...}, {
       bsize   = info.f_bsize,
       frsize  = info.f_frsize,
       blocks  = info.f_blocks,
@@ -983,7 +991,8 @@ local function statvfs (path, ...)
       fsid    = info.f_fsid,
       flag    = info.f_flag,
       namemax = info.f_namemax,
-  })
+    })
+  end
 end
 
 if _DEBUG ~= false then

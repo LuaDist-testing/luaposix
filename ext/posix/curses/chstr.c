@@ -1,7 +1,7 @@
 /*
- * Curses binding for Lua 5.1/5.2.
+ * Curses binding for Lua 5.1, 5.2 & 5.3.
  *
- * (c) Gary V. Vaughan <gary@vaughan.pe> 2013-2014
+ * (c) Gary V. Vaughan <gary@vaughan.pe> 2013-2015
  * (c) Reuben Thomas <rrt@sc3d.org> 2009-2012
  * (c) Tiago Dionizio <tiago.dionizio AT gmail.com> 2004-2007
  *
@@ -250,19 +250,21 @@ C__call(lua_State *L)
 	memset(ncs->str, ' ', len * sizeof(chtype));
 	return 1;
 }
+#endif /*!HAVE_CURSES*/
 
 
 static const luaL_Reg posix_curses_chstr_fns[] =
 {
+#if HAVE_CURSES
 	LPOSIX_FUNC( Clen		),
 	LPOSIX_FUNC( Cset_ch		),
 	LPOSIX_FUNC( Cset_str		),
 	LPOSIX_FUNC( Cget		),
 	LPOSIX_FUNC( Cdup		),
+#endif
 	{ NULL, NULL }
 };
 
-#endif /*!HAVE_CURSES*/
 
 
 LUALIB_API int

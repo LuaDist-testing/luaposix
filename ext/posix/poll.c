@@ -1,6 +1,6 @@
 /*
- * POSIX library for Lua 5.1/5.2.
- * (c) Gary V. Vaughan <gary@vaughan.pe>, 2013-2014
+ * POSIX library for Lua 5.1, 5.2 & 5.3.
+ * (c) Gary V. Vaughan <gary@vaughan.pe>, 2013-2015
  * (c) Reuben Thomas <rrt@sc3d.org> 2010-2013
  * (c) Natanael Copa <natanael.copa@gmail.com> 2008-2010
  * Clean up and bug fixes by Leo Razoumov <slonik.az@gmail.com> 2006-10-11
@@ -103,7 +103,7 @@ poll_fd_list_check_table(lua_State *L, int table)
 	while (lua_next(L, 1) != 0)
 	{
 		/* Verify the fd key */
-		luaL_argcheck(L, lua_isnumber(L, -2), table,
+		luaL_argcheck(L, lua_isinteger(L, -2), table,
 					  "contains non-integer key(s)");
 
 		/* Verify the table value */

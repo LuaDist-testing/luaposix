@@ -1,6 +1,6 @@
 /*
- * POSIX library for Lua 5.1/5.2.
- * (c) Gary V. Vaughan <gary@vaughan.pe>, 2013-2014
+ * POSIX library for Lua 5.1, 5.2 & 5.3.
+ * (c) Gary V. Vaughan <gary@vaughan.pe>, 2013-2015
  * (c) Reuben Thomas <rrt@sc3d.org> 2010-2013
  * (c) Natanael Copa <natanael.copa@gmail.com> 2008-2010
  * Clean up and bug fixes by Leo Razoumov <slonik.az@gmail.com> 2006-10-11
@@ -50,8 +50,8 @@ pushtimespec(lua_State *L, struct timespec *ts)
 		return lua_pushnil(L), 1;
 
 	lua_createtable(L, 0, 2);
-	setnumberfield(ts, tv_sec);
-	setnumberfield(ts, tv_nsec);
+	setintegerfield(ts, tv_sec);
+	setintegerfield(ts, tv_nsec);
 
 	settypemetatable("PosixTimespec");
 	return 1;
@@ -101,16 +101,16 @@ pushtm(lua_State *L, struct tm *t)
 		return lua_pushnil(L), 1;
 
 	lua_createtable(L, 0, 9);
-	setnumberfield(t, tm_sec);
-	setnumberfield(t, tm_min);
-	setnumberfield(t, tm_hour);
-	setnumberfield(t, tm_mday);
-	setnumberfield(t, tm_mday);
-	setnumberfield(t, tm_mon);
-	setnumberfield(t, tm_year);
-	setnumberfield(t, tm_wday);
-	setnumberfield(t, tm_yday);
-	setnumberfield(t, tm_isdst);
+	setintegerfield(t, tm_sec);
+	setintegerfield(t, tm_min);
+	setintegerfield(t, tm_hour);
+	setintegerfield(t, tm_mday);
+	setintegerfield(t, tm_mday);
+	setintegerfield(t, tm_mon);
+	setintegerfield(t, tm_year);
+	setintegerfield(t, tm_wday);
+	setintegerfield(t, tm_yday);
+	setintegerfield(t, tm_isdst);
 
 	settypemetatable("PosixTm");
 	return 1;

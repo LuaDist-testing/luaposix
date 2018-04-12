@@ -1,6 +1,6 @@
 /*
- * POSIX library for Lua 5.1/5.2.
- * (c) Gary V. Vaughan <gary@vaughan.pe>, 2013-2014
+ * POSIX library for Lua 5.1, 5.2 & 5.3.
+ * (c) Gary V. Vaughan <gary@vaughan.pe>, 2013-2015
  * (c) Reuben Thomas <rrt@sc3d.org> 2010-2013
  * (c) Natanael Copa <natanael.copa@gmail.com> 2008-2010
  * Clean up and bug fixes by Leo Razoumov <slonik.az@gmail.com> 2006-10-11
@@ -17,16 +17,10 @@
 
 #include <config.h>
 
-#include <unistd.h>	/* for _POSIX_VERSION */
+#include "_helpers.c"		/* For LPOSIX_2001_COMPLIANT */
 
-#if _POSIX_VERSION >= 200112L
+#if LPOSIX_2001_COMPLIANT
 #include <syslog.h>
-#endif
-
-#include "_helpers.c"
-
-
-#if _POSIX_VERSION >= 200112L
 
 /***
 Open the system logger.
@@ -122,7 +116,7 @@ PLOG_MASK(lua_State *L)
 
 static const luaL_Reg posix_syslog_fns[] =
 {
-#if _POSIX_VERSION >= 200112L
+#if LPOSIX_2001_COMPLIANT
 	LPOSIX_FUNC( PLOG_MASK		),
 	LPOSIX_FUNC( Popenlog		),
 	LPOSIX_FUNC( Psyslog		),
@@ -189,7 +183,7 @@ luaopen_posix_syslog(lua_State *L)
 	lua_pushliteral(L, "posix.syslog for " LUA_VERSION " / " PACKAGE_STRING);
 	lua_setfield(L, -2, "version");
 
-#if _POSIX_VERSION >= 200112L
+#if LPOSIX_2001_COMPLIANT
 	LPOSIX_CONST( LOG_CONS		);
 	LPOSIX_CONST( LOG_NDELAY	);
 	LPOSIX_CONST( LOG_PID		);

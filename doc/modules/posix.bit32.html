@@ -39,8 +39,8 @@
 <h2>Modules</h2>
 <ul class="$(kind=='Topics' and '' or 'nowrap'">
   <li><a href="../modules/posix.html">posix</a></li>
-  <li><a href="../modules/posix.bit32.html">posix.bit32</a></li>
-  <li><strong>posix.ctype</strong></li>
+  <li><strong>posix.bit32</strong></li>
+  <li><a href="../modules/posix.ctype.html">posix.ctype</a></li>
   <li><a href="../modules/posix.curses.html">posix.curses</a></li>
   <li><a href="../modules/posix.dirent.html">posix.dirent</a></li>
   <li><a href="../modules/posix.errno.html">posix.errno</a></li>
@@ -100,8 +100,8 @@
 
 <div id="content">
 
-<h1>Module <code>posix.ctype</code></h1>
-<p>Character tests.</p>
+<h1>Module <code>posix.bit32</code></h1>
+<p>Bitwise operators.</p>
 <p>
 
 </p>
@@ -110,12 +110,16 @@
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#isgraph">isgraph (character)</a></td>
-	<td class="summary">Check for any printable character except space.</td>
+	<td class="name" nowrap><a href="#band">band (...)</a></td>
+	<td class="summary">Bitwise and operation.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#isprint">isprint (character)</a></td>
-	<td class="summary">Check for any printable character including space.</td>
+	<td class="name" nowrap><a href="#bnot">bnot (i)</a></td>
+	<td class="summary">Bitwise not operation.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bor">bor (...)</a></td>
+	<td class="summary">Bitwise or operation.</td>
 	</tr>
 </table>
 
@@ -127,18 +131,18 @@
 
     <dl class="function">
     <dt>
-    <a name = "isgraph"></a>
-    <strong>isgraph (character)</strong>
+    <a name = "band"></a>
+    <strong>band (...)</strong>
     </dt>
     <dd>
-    Check for any printable character except space.
+    Bitwise and operation.
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">character</span>
-            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
-         to act on
+        <li><span class="parameter">...</span>
+            <span class="types"><span class="type">int</span></span>
+         32-bit integers to act on
         </li>
     </ul>
 
@@ -146,30 +150,26 @@
     <ol>
 
            <span class="types"><span class="type">int</span></span>
-        non-zero if character is not in the class
+        bitwise and of all arguments, truncated to 32 bits
     </ol>
 
 
-    <h3>See also:</h3>
-    <ul>
-         <a href="http://pubs.opengroup.org/onlinepubs/009695399/functions/isgraph.html">isgraph(3)</a>
-    </ul>
 
 
 </dd>
     <dt>
-    <a name = "isprint"></a>
-    <strong>isprint (character)</strong>
+    <a name = "bnot"></a>
+    <strong>bnot (i)</strong>
     </dt>
     <dd>
-    Check for any printable character including space.
+    Bitwise not operation.
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">character</span>
-            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
-         to act on
+        <li><span class="parameter">i</span>
+            <span class="types"><span class="type">int</span></span>
+         32-bit integer to act on
         </li>
     </ul>
 
@@ -177,14 +177,37 @@
     <ol>
 
            <span class="types"><span class="type">int</span></span>
-        non-zero if character is not in the class
+        bitwise negation of <em>i</em>
     </ol>
 
 
-    <h3>See also:</h3>
+
+
+</dd>
+    <dt>
+    <a name = "bor"></a>
+    <strong>bor (...)</strong>
+    </dt>
+    <dd>
+    Bitwise or operation.
+
+
+    <h3>Parameters:</h3>
     <ul>
-         <a href="http://pubs.opengroup.org/onlinepubs/009695399/functions/isprint.html">isprint(3)</a>
+        <li><span class="parameter">...</span>
+            <span class="types"><span class="type">int</span></span>
+         32-bit integers to act on
+        </li>
     </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">int</span></span>
+        bitwise or of all arguments, truncated to 32 bits
+    </ol>
+
+
 
 
 </dd>

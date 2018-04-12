@@ -1,6 +1,6 @@
 /*
- * POSIX library for Lua 5.1/5.2.
- * (c) Gary V. Vaughan <gary@vaughan.pe>, 2013-2014
+ * POSIX library for Lua 5.1, 5.2 & 5.3.
+ * (c) Gary V. Vaughan <gary@vaughan.pe>, 2013-2015
  * (c) Reuben Thomas <rrt@sc3d.org> 2010-2013
  * (c) Natanael Copa <natanael.copa@gmail.com> 2008-2010
  * Clean up and bug fixes by Leo Razoumov <slonik.az@gmail.com> 2006-10-11
@@ -18,11 +18,10 @@
 #include <config.h>
 
 #include <sys/times.h>
-#include <unistd.h>	/* for sysconf(3) */
 
 #include "_helpers.c"
 
-#define pushtimefield(k,x) pushnumberfield((k), ((lua_Number)x)/clk_tck)
+#define pushtimefield(k,x) pushintegerfield((k), ((lua_Integer)x)/clk_tck)
 
 /***
 Process times record.
