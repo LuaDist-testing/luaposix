@@ -1,17 +1,17 @@
 -- This file was automatically generated for the LuaDist project.
 
 package="luaposix"
-version="5.1.22-1"
+version="5.1.23-1"
 -- LuaDist source
 source = {
-  tag = "5.1.22-1",
+  tag = "5.1.23-1",
   url = "git://github.com/LuaDist-testing/luaposix.git"
 }
 -- Original source
 -- source = {
---   url = "https://github.com/downloads/luaposix/luaposix/luaposix-5.1.22.tar.gz",
---   md5 = "e5b30010b5cb32e596a15bc92faae3df",
---   dir = "luaposix-5.1.22"
+--   url = "https://github.com/downloads/luaposix/luaposix/luaposix-5.1.23.tar.gz",
+--   md5 = "ebe7d335741ca736e003a6844a0fbf92",
+--   dir = "luaposix-5.1.23"
 -- }
 description = {
   summary = "Lua bindings for POSIX (including curses)",
@@ -28,6 +28,7 @@ dependencies = {
 }
 build = {
   type = "command",
-  build_command = "LUA=$(LUA) CPPFLAGS=-I$(LUA_INCDIR) ./configure --prefix=$(PREFIX) --libdir=$(LIBDIR) --datadir=$(LUADIR)",
-  install_command = "make install"
+  build_command = "LUA=$(LUA) CPPFLAGS=-I$(LUA_INCDIR) ./configure --prefix=$(PREFIX) --libdir=$(LIBDIR) --datadir=$(LUADIR) && make clean && make",
+  install_command = "make install",
+  copy_directories = {}
 }
