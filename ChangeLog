@@ -1,3 +1,25 @@
+2012-09-13  Reuben Thomas <rrt@sc3d.org>
+
+	* dummy.c: dummy.c: fix copyright notice to be public domain
+
+2012-09-13  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac: version: bump to 5.1.22.
+
+2012-09-13  Reuben Thomas <rrt@sc3d.org>
+
+	* bootstrap.conf, dummy.c: gnulib: re-add dummy.c with correct
+	license to fix Mac OS X build (issue #46)
+
+2012-09-11  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac: configure.ac: enable automake to generate
+	dependencies for rockspec (thanks, Hisham Muhammad).
+
+2012-09-07  Reuben Thomas <rrt@sc3d.org>
+
+	* : Merge pull request #45 from wcmaier/fix/github-url Update Github URL.
+
 2012-09-03  Reuben Thomas <rrt@sc3d.org>
 
 	* configure.ac: Bump version to 5.1.21.

@@ -1,17 +1,17 @@
 -- This file was automatically generated for the LuaDist project.
 
 package="luaposix"
-version="5.1.21-1"
+version="5.1.22-1"
 -- LuaDist source
 source = {
-  tag = "5.1.21-1",
+  tag = "5.1.22-1",
   url = "git://github.com/LuaDist-testing/luaposix.git"
 }
 -- Original source
 -- source = {
---   url = "https://github.com/downloads/luaposix/luaposix/luaposix-5.1.21.tar.gz",
---   md5 = "7bc06747199f6bd2994ed5a7b2bdf089",
---   dir = "luaposix-5.1.21"
+--   url = "https://github.com/downloads/luaposix/luaposix/luaposix-5.1.22.tar.gz",
+--   md5 = "e5b30010b5cb32e596a15bc92faae3df",
+--   dir = "luaposix-5.1.22"
 -- }
 description = {
   summary = "Lua bindings for POSIX (including curses)",

@@ -192,6 +192,7 @@ AC_DEFUN([gltests_LIBSOURCES], [
 # This macro records the list of files which have been installed by
 # gnulib-tool and may be removed by future gnulib-tool invocations.
 AC_DEFUN([gl_FILE_LIST], [
+  lib/dummy.c
   m4/00gnulib.m4
   m4/gnulib-common.m4
   m4/manywarnings.m4

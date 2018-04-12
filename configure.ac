@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script
 
-AC_INIT(luaposix, 5.1.21, rrt@sc3d.org)
+AC_INIT(luaposix, 5.1.22, rrt@sc3d.org)
 AC_CONFIG_AUX_DIR([build-aux])
 
 AM_INIT_AUTOMAKE([-Wall -Werror std-options])
@@ -122,5 +122,6 @@ AX_WITH_PROG([MD5SUM], [md5sum], [false])
 dnl Generate output files
 AC_CONFIG_MACRO_DIR(m4)
 AC_CONFIG_HEADER(config.h)
-AC_CONFIG_FILES(Makefile lib/Makefile $PACKAGE.rockspec)
+AC_SUBST(PACKAGE) # so that automake can dependencies for ${PACKAGE}.rockspec
+AC_CONFIG_FILES(Makefile lib/Makefile ${PACKAGE}.rockspec)
 AC_OUTPUT
