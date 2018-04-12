@@ -1,153 +1,154 @@
+/* config.h.  Generated from config.h.in by configure.  */
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Define this if your system has a crypt() function */
-#undef HAVE_CRYPT
+#define HAVE_CRYPT /**/
 
 /* Define to 1 if you have the <crypt.h> header file. */
-#undef HAVE_CRYPT_H
+#define HAVE_CRYPT_H 1
 
 /* Define to 1 if a SysV or X/Open compatible Curses library is present */
-#undef HAVE_CURSES
+#define HAVE_CURSES 1
 
 /* Define to 1 if library supports color (enhanced functions) */
-#undef HAVE_CURSES_COLOR
+#define HAVE_CURSES_COLOR 1
 
 /* Define to 1 if library supports X/Open Enhanced functions */
-#undef HAVE_CURSES_ENHANCED
+#define HAVE_CURSES_ENHANCED 1
 
 /* Define to 1 if <curses.h> is present */
-#undef HAVE_CURSES_H
+/* #undef HAVE_CURSES_H */
 
 /* Define to 1 if library supports certain obsolete features */
-#undef HAVE_CURSES_OBSOLETE
+#define HAVE_CURSES_OBSOLETE 1
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
-#undef HAVE_DLFCN_H
+#define HAVE_DLFCN_H 1
 
 /* Define to 1 if you have the <inttypes.h> header file. */
-#undef HAVE_INTTYPES_H
+#define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the <lauxlib.h> header file. */
-#undef HAVE_LAUXLIB_H
+#define HAVE_LAUXLIB_H 1
 
 /* Define to 1 if you have the <luaconf.h> header file. */
-#undef HAVE_LUACONF_H
+#define HAVE_LUACONF_H 1
 
 /* Define to 1 if you have the <lualib.h> header file. */
-#undef HAVE_LUALIB_H
+#define HAVE_LUALIB_H 1
 
 /* Define to 1 if you have the <lua.h> header file. */
-#undef HAVE_LUA_H
+#define HAVE_LUA_H 1
 
 /* Define to 1 if you have the <memory.h> header file. */
-#undef HAVE_MEMORY_H
+#define HAVE_MEMORY_H 1
 
 /* Define to 1 if the Ncurses library is present */
-#undef HAVE_NCURSES
+/* #undef HAVE_NCURSES */
 
 /* Define to 1 if the NcursesW library is present */
-#undef HAVE_NCURSESW
+#define HAVE_NCURSESW 1
 
 /* Define to 1 if <ncursesw/curses.h> is present */
-#undef HAVE_NCURSESW_CURSES_H
+#define HAVE_NCURSESW_CURSES_H 1
 
 /* Define to 1 if <ncursesw.h> is present */
-#undef HAVE_NCURSESW_H
+/* #undef HAVE_NCURSESW_H */
 
 /* Define to 1 if <ncurses/curses.h> is present */
-#undef HAVE_NCURSES_CURSES_H
+/* #undef HAVE_NCURSES_CURSES_H */
 
 /* Define to 1 if <ncurses.h> is present */
-#undef HAVE_NCURSES_H
+/* #undef HAVE_NCURSES_H */
 
 /* Define to 1 if you have the `resizeterm' function. */
-#undef HAVE_RESIZETERM
+#define HAVE_RESIZETERM 1
 
 /* Define to 1 if you have the `statvfs' function. */
-#undef HAVE_STATVFS
+#define HAVE_STATVFS 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
-#undef HAVE_STDINT_H
+#define HAVE_STDINT_H 1
 
 /* Define to 1 if you have the <stdlib.h> header file. */
-#undef HAVE_STDLIB_H
+#define HAVE_STDLIB_H 1
 
 /* Define to 1 if you have the <strings.h> header file. */
-#undef HAVE_STRINGS_H
+#define HAVE_STRINGS_H 1
 
 /* Define to 1 if you have the <string.h> header file. */
-#undef HAVE_STRING_H
+#define HAVE_STRING_H 1
 
 /* Define to 1 if you have the `strlcpy' function. */
-#undef HAVE_STRLCPY
+/* #undef HAVE_STRLCPY */
 
 /* Define to 1 if you have the <sys/statvfs.h> header file. */
-#undef HAVE_SYS_STATVFS_H
+#define HAVE_SYS_STATVFS_H 1
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
-#undef HAVE_SYS_STAT_H
+#define HAVE_SYS_STAT_H 1
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-#undef HAVE_SYS_TYPES_H
+#define HAVE_SYS_TYPES_H 1
 
 /* Define to 1 if you have the <unistd.h> header file. */
-#undef HAVE_UNISTD_H
+#define HAVE_UNISTD_H 1
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
-#undef LT_OBJDIR
+#define LT_OBJDIR ".libs/"
 
 /* Name of package */
-#undef PACKAGE
+#define PACKAGE "luaposix"
 
 /* Define to the address where bug reports for this package should be sent. */
-#undef PACKAGE_BUGREPORT
+#define PACKAGE_BUGREPORT "rrt@sc3d.org"
 
 /* Define to the full name of this package. */
-#undef PACKAGE_NAME
+#define PACKAGE_NAME "luaposix"
 
 /* Define to the full name and version of this package. */
-#undef PACKAGE_STRING
+#define PACKAGE_STRING "luaposix 5.1.24"
 
 /* Define to the one symbol short name of this package. */
-#undef PACKAGE_TARNAME
+#define PACKAGE_TARNAME "luaposix"
 
 /* Define to the home page for this package. */
-#undef PACKAGE_URL
+#define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#undef PACKAGE_VERSION
+#define PACKAGE_VERSION "5.1.24"
 
 /* Define to 1 if you have the ANSI C header files. */
-#undef STDC_HEADERS
+#define STDC_HEADERS 1
 
 /* Enable extensions on AIX 3, Interix.  */
 #ifndef _ALL_SOURCE
-# undef _ALL_SOURCE
+# define _ALL_SOURCE 1
 #endif
 /* Enable GNU extensions on systems that have them.  */
 #ifndef _GNU_SOURCE
-# undef _GNU_SOURCE
+# define _GNU_SOURCE 1
 #endif
 /* Enable threading extensions on Solaris.  */
 #ifndef _POSIX_PTHREAD_SEMANTICS
-# undef _POSIX_PTHREAD_SEMANTICS
+# define _POSIX_PTHREAD_SEMANTICS 1
 #endif
 /* Enable extensions on HP NonStop.  */
 #ifndef _TANDEM_SOURCE
-# undef _TANDEM_SOURCE
+# define _TANDEM_SOURCE 1
 #endif
 /* Enable general extensions on Solaris.  */
 #ifndef __EXTENSIONS__
-# undef __EXTENSIONS__
+# define __EXTENSIONS__ 1
 #endif
 
 
 /* Version number of package */
-#undef VERSION
+#define VERSION "5.1.24"
 
 /* Define to 1 if on MINIX. */
-#undef _MINIX
+/* #undef _MINIX */
 
 /* The _Noreturn keyword of C11.  */
 #if ! (defined _Noreturn \
@@ -165,10 +166,10 @@
 
 /* Define to 2 if the system does not provide POSIX.1 features except with
    this defined. */
-#undef _POSIX_1_SOURCE
+/* #undef _POSIX_1_SOURCE */
 
 /* Define to 1 if you need to in order for `stat' and other things to work. */
-#undef _POSIX_SOURCE
+/* #undef _POSIX_SOURCE */
 
 /* Work around a bug in Apple GCC 4.0.1 build 5465: In C99 mode, it supports
    the ISO C 99 semantics of 'extern inline' (unlike the GNU C semantics of

@@ -1,9 +1,9 @@
 dnl Process this file with autoconf to produce a configure script
 
-AC_INIT(luaposix, 5.1.23, rrt@sc3d.org)
+AC_INIT(luaposix, 5.1.24, rrt@sc3d.org)
 AC_CONFIG_AUX_DIR([build-aux])
 
-AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AM_INIT_AUTOMAKE([-Wall foreign])
 
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
@@ -58,12 +58,12 @@ if test "$gl_gcc_warnings" = yes; then
   gl_WARN_ADD([-fmudflap])
 fi
 
+dnl required by automake 1.12.x, not available in 1.10.x
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
+
 LT_PREREQ([2.2.6])
 LT_INIT([disable-static])
-LT_OUTPUT
 
-eval `./libtool --config |grep '^objdir='`
-eval `./libtool --config |grep '^shrext_cmds='`
 module=yes eval shrext=$shrext_cmds
 
 AC_SUBST([objdir])
@@ -103,12 +103,14 @@ AC_ARG_VAR(CURSES_LIB, [linker flags for curses library])
 AC_SUBST(WANTEDLIBS)
 AC_SUBST(WANTEDLUA)
 
+save_LIBS=$LIBS
+LIBS="$CURSES_LIB $LIBS"
+AC_CHECK_FUNCS([resizeterm])
+LIBS=$save_LIBS
+
 dnl Lua 5.1 or 5.2
-AX_PROG_LUA(501, 503)
+AX_PROG_LUA(5.1, 5.3)
 AX_LUA_HEADERS
-AX_LUA_HEADERS_VERSION(501, 503)
-AC_SUBST(LUA)
-AC_SUBST(LUA_INCLUDE)
 
 dnl Perl
 AX_WITH_PROG([PERL], [perl])
@@ -116,12 +118,12 @@ if test -z "$PERL"; then
   AC_MSG_FAILURE([cannot find perl])
 fi
 
-dnl md5sum
-AX_WITH_PROG([MD5SUM], [md5sum], [false])
+dnl ldoc
+AX_WITH_PROG([LDOC], [ldoc], [false])
+AM_CONDITIONAL([HAVE_LDOC], [test false != "$LDOC"])
 
 dnl Generate output files
 AC_CONFIG_MACRO_DIR(m4)
 AC_CONFIG_HEADER(config.h)
-AC_SUBST(PACKAGE) # so that automake can dependencies for ${PACKAGE}.rockspec
-AC_CONFIG_FILES(Makefile lib/Makefile ${PACKAGE}.rockspec luarocks-config.lua)
+AC_CONFIG_FILES([Makefile luarocks-config.lua])
 AC_OUTPUT

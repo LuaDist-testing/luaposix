@@ -1,7 +1,5 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = lib
-
 ACLOCAL_AMFLAGS = -I m4
 
 AM_CPPFLAGS = $(LUA_INCLUDE)
@@ -13,7 +11,7 @@ dist_data_DATA = posix.lua $(WANTEDLUA)
 
 posix_c_la_SOURCES = lposix.c
 posix_c_la_CFLAGS = $(POSIX_EXTRA_CFLAGS)
-posix_c_la_LDFLAGS = -module -avoid-version $(builddir)/lib/libgnu.la $(POSIX_EXTRA_LDFLAGS)
+posix_c_la_LDFLAGS = -module -avoid-version $(POSIX_EXTRA_LDFLAGS)
 
 curses_c_la_SOURCES = lcurses.c
 curses_c_la_LDFLAGS = -module -avoid-version $(CURSES_LIB) -rpath '$(libdir)'
@@ -25,8 +23,6 @@ LUA_PATH ?= ;
 LUA_CPATH ?= ;
 LUA_ENV = LUA_PATH="$(abs_srcdir)/?.lua;$(LUA_PATH)" LUA_CPATH="$(abs_builddir)/$(objdir)/?$(shrext);$(LUA_CPATH)"
 
-HTML = curses.html lcurses_c.html
-
 LUATESTS =				\
 	$(srcdir)/tests-posix.lua	\
 	$(srcdir)/tests-curses.lua
@@ -34,13 +30,9 @@ LUATESTS =				\
 LUNITTESTS=				\
 	$(srcdir)/tests-fcntl.lua
 
-ROCKSPEC = $(PACKAGE)-$(VERSION)-1.rockspec
-
-$(ROCKSPEC): $(PACKAGE).rockspec dist
-	sed -e 's/@MD5@/'`$(MD5SUM) $(distdir).tar.gz | cut -d " " -f 1`'/g' < $(PACKAGE).rockspec > $@
-
 dist_doc_DATA = 			\
-	$(HTML)				\
+	curses.html			\
+	lcurses_c.html			\
 	docs/index.html			\
 	docs/ldoc.css
 examplesdir = $(docdir)/examples
@@ -50,34 +42,56 @@ EXTRA_DIST =				\
 	$(LUATESTS)			\
 	$(LUNITTESTS)			\
 	make_lcurses_doc.pl		\
-	$(PACKAGE).rockspec.in		\
 	strlcpy.c			\
-	lua52compat.h
+	lua52compat.h			\
+	build-aux/install-sh		\
+	build-aux/config.guess		\
+	build-aux/config.sub
 
-DISTCLEANFILES = $(PACKAGE).rockspec
-
-$(HTML): lcurses.c make_lcurses_doc.pl
+$(dist_doc_DATA): lcurses.c make_lcurses_doc.pl
 	$(PERL) make_lcurses_doc.pl
+if HAVE_LDOC
+	$(LDOC) .
+else
+	touch docs/index.html docs/ldoc.css
+endif
 
-doc: $(HTML)
-	ldoc .
+MAINTAINERCLEANFILES = docs/index.html docs/ldoc.css
+
+doc: $(dist_doc_DATA)
 
 check-local:
 	ls $(LUATESTS) | $(LUA_ENV) xargs -L 1 $(LUA)
 	ls $(LUNITTESTS) | $(LUA_ENV) xargs -L 1 lunit --interpreter $(LUA)
 
-prerelease: distcheck
+rockspecs:
+	rm -f *.rockspec
+	$(LUA) mkrockspecs.lua $(PACKAGE) $(VERSION)
+	$(LUA) mkrockspecs.lua $(PACKAGE) git
+
+bootstrap:
+	./bootstrap && ./configure
+
+tag-release:
 	git diff --exit-code && \
-	git push
-
-WOGER_ARGS = package=$(PACKAGE) package_name=$(PACKAGE_NAME) version=$(VERSION) description="`LUA_INIT= LUA_PATH='$(abs_srcdir)/?.rockspec.in' $(LUA) -l$(PACKAGE) -e 'print (description.summary)'`" notes=release-notes-$(VERSION) dist_type="tar.gz" github_user=rrthomas
-
-# Should also upload the rock, but currently github-upload is broken
-#woger github $(WOGER_ARGS) &&
-check-luarock: prerelease
-	LUAROCKS_CONFIG=$(abs_srcdir)/luarocks-config.lua luarocks --tree=$(abs_srcdir)/luarocks build $(ROCKSPEC)
-
-release: check-luarock
-	woger lua $(WOGER_ARGS) && \
 	git tag -a -m "Release tag" v$(VERSION) && \
-	git push --tags
+	git push && git push --tags
+
+check-in-release: distcheck
+	git checkout release && \
+	tar zxf $(PACKAGE)-$(VERSION).tar.gz && \
+	cp -af $(PACKAGE)-$(VERSION)/* . && \
+	git add . && git ci -m "Release v$(VERSION)" && \
+	git tag -a -m "Full source release tag" release-v$(VERSION) && \
+	git push && git push --tags && \
+	git checkout master && \
+	rm -rf $(PACKAGE)-$(VERSION)/
+
+# After check-in-release we need to bootstrap to get the build files back
+release: rockspecs
+	$(MAKE) tag-release && \
+	$(MAKE) check-in-release && \
+	$(MAKE) bootstrap && \
+	$(MAKE) rockspecs && \
+	LUAROCKS_CONFIG=$(abs_srcdir)/luarocks-config.lua luarocks --tree=$(abs_srcdir)/luarocks build $(PACKAGE)-$(VERSION)-1.rockspec && \
+	woger lua package=$(PACKAGE) package_name=$(PACKAGE_NAME) version=$(VERSION) description="`LUA_INIT= LUA_PATH='$(abs_srcdir)/?.rockspec.in' $(LUA) -l$(PACKAGE) -e 'print (description.summary)'`" notes=release-notes-$(VERSION) home="`LUA_INIT= LUA_PATH='$(abs_srcdir)/?.rockspec.in' $(LUA) -l$(PACKAGE) -e 'print (description.homepage)'`"

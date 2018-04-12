@@ -3,7 +3,7 @@
 */
 /*
 *  POSIX library for Lua 5.1/5.2.
-* (c) Reuben Thomas (maintainer) <rrt@sc3d.org> 2010-2012
+* (c) Reuben Thomas <rrt@sc3d.org> 2010-2013
 * (c) Natanael Copa <natanael.copa@gmail.com> 2008-2010
 * Clean up and bug fixes by Leo Razoumov <slonik.az@gmail.com> 2006-10-11
 * Luiz Henrique de Figueiredo <lhf@tecgraf.puc-rio.br> 07 Apr 2006 23:17:49
@@ -744,7 +744,7 @@ static int Preadlink(lua_State *L)
 	const char *path = luaL_checkstring(L, 1);
 	void *ud;
 	lua_Alloc lalloc = lua_getallocf(L, &ud);
-	if (stat(path, &s))
+	if (lstat(path, &s))
 		return pusherror(L, path);
 	if ((b = lalloc(ud, NULL, 0, s.st_size + 1)) == NULL)
 		return pusherror(L, "lalloc");
@@ -2059,6 +2059,19 @@ static int Pfcntl(lua_State *L)
 }
 
 /***
+Test whether a file descriptor refers to a terminal.
+@function isatty
+@see isatty(3)
+@int fd file descriptor to test
+@return 1 if fd is an open file descriptor referring to a terminal, or nil otherwise
+@return error message if failed
+*/
+static int Pisatty(lua_State *L)
+{
+	return pushresult(L, isatty(luaL_checkint(L, 1)) == 0 ? -1 : 1, "isatty");
+}
+
+/***
 Return information about this machine.
 @function uname
 @see uname(2)
@@ -2459,7 +2472,11 @@ static void totm(lua_State *L, int n, struct tm *tp)
 	lua_getfield(L, n, "hour");
 	tp->tm_hour = luaL_optint(L, -1, 0);
 	lua_pop(L, 1);
+	/* For compatibility to Lua os.date() read "day" if "monthday"
+		 does not yield a number */
 	lua_getfield(L, n, "monthday");
+	if (!lua_isnumber(L, -1))
+		lua_getfield(L, n, "day");
 	tp->tm_mday = luaL_optint(L, -1, 0);
 	lua_pop(L, 1);
 	lua_getfield(L, n, "month");
@@ -2481,7 +2498,7 @@ static void totm(lua_State *L, int n, struct tm *tp)
 
 static void pushtm(lua_State *L, struct tm t)
 {
-	lua_createtable(L, 0, 9);
+	lua_createtable(L, 0, 10);
 	lua_pushinteger(L, t.tm_sec);
 	lua_setfield(L, -2, "sec");
 	lua_pushinteger(L, t.tm_min);
@@ -2490,6 +2507,8 @@ static void pushtm(lua_State *L, struct tm t)
 	lua_setfield(L, -2, "hour");
 	lua_pushinteger(L, t.tm_mday);
 	lua_setfield(L, -2, "monthday");
+	lua_pushinteger(L, t.tm_mday);
+	lua_setfield(L, -2, "day");
 	lua_pushinteger(L, t.tm_mon + 1);
 	lua_setfield(L, -2, "month");
 	lua_pushinteger(L, t.tm_year + 1900);
@@ -2507,7 +2526,7 @@ Convert time in seconds to table.
 @function localtime
 @param t time in seconds since epoch (default now)
 @return time table: contains "is_dst","yearday","hour","min","year","month",
- "sec","weekday","monthday"
+ "sec","weekday","monthday", "day" (the same as "monthday")
 */
 static int Plocaltime(lua_State *L)
 {
@@ -2701,7 +2720,7 @@ Parse command-line options.
 @string shortopts e.g 'ho:v' (colon means 'receives argument')
 @param longopts e.g. `{{'help','none',2},...}`
 @usage for ret, longindex, optind, optarg in posix.getopt_long (arg, shortopts, longopts, opterr, optind) do ... end
-@see options.lua
+@see getopt.lua
 */
 static int Pgetopt_long(lua_State *L)
 {
@@ -2970,6 +2989,7 @@ static const luaL_Reg R[] =
 	MENTRY( Pglob		),
 	MENTRY( Pgmtime		),
 	MENTRY( Phostid		),
+	MENTRY( Pisatty		),
 	MENTRY( Pisgraph	),
 	MENTRY( Pisprint	),
 	MENTRY( Pkill		),
@@ -3067,6 +3087,9 @@ LUALIB_API int luaopen_posix_c (lua_State *L)
 
 	/* Miscellaneous */
 	set_integer_const( "WNOHANG",		WNOHANG		);
+	set_integer_const( "STDIN_FILENO",	STDIN_FILENO	);
+	set_integer_const( "STDOUT_FILENO",	STDOUT_FILENO	);
+	set_integer_const( "STDERR_FILENO",	STDERR_FILENO	);
 
 	/* errno values */
 #define MENTRY(_e) set_integer_const(LPOSIX_STR_1(LPOSIX_SPLICE(_E, _e)), LPOSIX_SPLICE(E, _e))
