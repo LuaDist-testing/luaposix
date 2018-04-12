@@ -1,17 +1,17 @@
 -- This file was automatically generated for the LuaDist project.
 
 package="luaposix"
-version="5.1.2-1"
+version="5.1.7-1"
 -- LuaDist source
 source = {
-  tag = "5.1.2-1",
+  tag = "5.1.7-1",
   url = "git://github.com/LuaDist-testing/luaposix.git"
 }
 -- Original source
 -- source = {
---    url = "http://luaforge.net/frs/download.php/3063/luaposix-5.1.2.tar.gz",
---    md5 = "31deeb4add91f76b3c2d36aae2888d81",
---    dir = "luaposix-5.1.2"
+--    url = "http://luaforge.net/frs/download.php/4631/luaposix-5.1.7.tar.bz2",
+--    md5 = "e7ed42536548ebc109bc1cb73f08b1e9",
+--    dir = "luaposix-5.1.7"
 -- }
 description = {
    summary = "A POSIX library for Lua.",

@@ -13,6 +13,8 @@
 #include <sys/types.h>
 #include <sys/utsname.h>
 #include <sys/wait.h>
+#include <sys/resource.h>
+#include <sys/time.h>
 
 #include <dirent.h>
 #include <errno.h>
@@ -32,8 +34,12 @@
 #include <unistd.h>
 #include <utime.h>
 
+#ifndef VERSION
+#  define VERSION "unknown"
+#endif
+
 #define MYNAME		"posix"
-#define MYVERSION	MYNAME " library for " LUA_VERSION " / Jan 2008"
+#define MYVERSION	MYNAME " library for " LUA_VERSION " / " VERSION
 
 #ifndef ENABLE_SYSLOG
 #define ENABLE_SYSLOG 	1
@@ -149,7 +155,7 @@ static uid_t mygetuid(lua_State *L, int i)
 	else if (lua_isstring(L, i))
 	{
 		struct passwd *p=getpwnam(lua_tostring(L, i));
-		return (p==NULL) ? -1 : p->pw_uid;
+		return (p==NULL) ? (uid_t)-1 : p->pw_uid;
 	}
 	else
 		return luaL_typerror(L, i, "string or number");
@@ -164,7 +170,7 @@ static gid_t mygetgid(lua_State *L, int i)
 	else if (lua_isstring(L, i))
 	{
 		struct group *g=getgrnam(lua_tostring(L, i));
-		return (g==NULL) ? -1 : g->gr_gid;
+		return (g==NULL) ? (uid_t)-1 : g->gr_gid;
 	}
 	else
 		return luaL_typerror(L, i, "string or number");
@@ -233,7 +239,7 @@ static int Pglob(lua_State *L)                  /** glob(pattern) */
    return pusherror(L, pattern);
  else
    {
-     int i;
+     unsigned int i;
      lua_newtable(L);
      for (i=1; i<=globres.gl_pathc; i++) {
        lua_pushstring(L, globres.gl_pathv[i-1]);
@@ -406,6 +412,16 @@ static int Pfileno(lua_State *L)	/** fileno(filehandle) */
 }
 
 
+static int Pfdopen(lua_State *L)	/** fdopen(fd, mode) */
+{
+	int fd = luaL_checkint(L, 1);
+	const char *mode = luaL_checkstring(L, 2);
+	if (!pushfile(L, fd, mode))
+		return pusherror(L, "fdpoen");
+	return 1;
+}
+
+
 /* helper func for Pdup */
 static const char *filemode(int fd)
 {
@@ -488,19 +504,10 @@ static int Ppoll(lua_State *L)   /** poll(filehandle, timeout) */
 {
 	struct pollfd fds;
 	FILE* file = *(FILE**)luaL_checkudata(L,1,LUA_FILEHANDLE);
-	int ret,timeout = luaL_checkint(L,2);
+	int timeout = luaL_checkint(L,2);
 	fds.fd = fileno(file);
 	fds.events = POLLIN;
-	ret = poll(&fds,1,timeout);
-	if (ret == -1) {
-		lua_error(L);
-	}
-	if (ret == 1 && ((fds.revents & POLLHUP) || (fds.revents & POLLNVAL))) {
-		lua_pushnil(L);
-	} else {
-		lua_pushnumber(L,ret);
-	}    
-	return 1;
+	return pushresult(L, poll(&fds,1,timeout), NULL);
 }
 
 static int Pwait(lua_State *L)			/** wait([pid]) */
@@ -1004,7 +1011,283 @@ static int Pcloselog(lua_State *L)		/** closelog() */
 	closelog();
 	return 0;
 }
+
+static int Psetlogmask(lua_State* L) 		/** setlogmask(priority...) */
+{
+	int argno = lua_gettop(L);
+	int mask = 0;
+	int i;
+
+	for (i=1; i <= argno; i++){
+		mask |= LOG_MASK(luaL_checkint(L,i));
+	} 
+
+	return pushresult(L, setlogmask(mask),"setlogmask");
+}
 #endif
+
+/*
+ * XXX: GNU and BSD handle the forward declaration of crypt() in different
+ * and annoying ways (especially GNU). Declare it here just to make sure
+ * that it's there
+ */
+char *crypt(const char *, const char *);
+
+static int Pcrypt(lua_State *L)		/** crypt(string,salt) */
+{
+	const char *str, *salt;
+	char *res;
+
+	str = luaL_checkstring(L, 1);
+	salt = luaL_checkstring(L, 2);
+	if (strlen(salt) < 2)
+		luaL_error(L, "not enough salt");
+
+	res = crypt(str, salt);
+	lua_pushstring(L, res);
+
+	return 1;
+}
+
+/*	Like POSIX's setrlimit()/getrlimit() API functions.
+ *
+ *	Syntax:
+ *	posix.setrlimit(resource, softlimit, hardlimit)
+ *
+ *	Any negative limit or nil will be replace with the current
+ *	limit by an additional call of getrlimit().
+ *
+ *	Valid resouces are:
+ *		"core", "cpu", "data", "fsize", "memlock",
+ *		"nofile", "nproc", "rss", "stack"
+ *
+ *	Example usage:
+ *	posix.setrlimit("NOFILE", 1000, 2000)
+ */
+
+static const int Krlimit[] =
+{
+	RLIMIT_CORE, RLIMIT_CPU, RLIMIT_DATA, RLIMIT_FSIZE, RLIMIT_MEMLOCK,
+	RLIMIT_NOFILE, RLIMIT_NPROC, RLIMIT_RSS, RLIMIT_STACK,
+	-1
+};
+
+static const char *const Srlimit[] =
+{
+	"core", "cpu", "data", "fsize", "memlock",
+	"nofile", "nproc", "rss", "stack",
+	NULL
+};
+
+static int get_rlimit_const(const char *str)
+{
+	int i;
+	for (i = 0; Srlimit[i] != NULL; i++)
+		if (strcmp(Srlimit[i], str) == 0)
+			return Krlimit[i];
+	return -1;
+}
+
+static int Psetrlimit(lua_State *L) 	/** setrlimit(resource,soft[,hard]) */
+{
+	int softlimit;
+	int hardlimit;
+	const char *rid_str;
+	int rid = 0;
+	struct rlimit lim;
+	struct rlimit lim_current;
+	int rc;
+	
+	rid_str = luaL_checkstring(L, 1);
+	softlimit = luaL_optint(L, 2, -1);
+	hardlimit = luaL_optint(L, 3, -1);
+	
+	if (softlimit < 0 || hardlimit < 0) {
+		if ((rc = getrlimit(rid, &lim_current)) < 0)
+			return pushresult(L, rc, "getrlimit");
+	}
+	
+	if (softlimit < 0) lim.rlim_cur = lim_current.rlim_cur;
+		else lim.rlim_cur = softlimit;
+	if (hardlimit < 0) lim.rlim_max = lim_current.rlim_max;
+		else lim.rlim_max = hardlimit;
+	
+	return pushresult(L, setrlimit(rid, &lim), "setrlimit");       
+}
+
+static int Pgetrlimit(lua_State *L) 	/** getrlimit(resource) */
+{
+	struct rlimit lim;
+	int rid, rc;
+	const char *rid_str = luaL_checkstring(L, 1);
+	rid = get_rlimit_const(rid_str);
+	rc = getrlimit(rid, &lim);
+	if (rc < 0)
+		return pusherror(L, "getrlimit");
+	lua_pushnumber(L, lim.rlim_cur);
+	lua_pushnumber(L, lim.rlim_max);
+	return 2;
+}
+
+static int Pgettimeofday(lua_State *L)		/** gettimeofday() */
+{
+	struct timeval tv;
+	struct timezone tz;
+	if (gettimeofday(&tv, &tz) == -1)
+		return pusherror(L, "gettimeofday");
+	lua_pushnumber(L, tv.tv_sec);
+	lua_pushnumber(L, tv.tv_usec);
+	lua_pushnumber(L, tz.tz_minuteswest);
+	lua_pushnumber(L, tz.tz_dsttime);
+	return 4;
+}
+
+static int Ptime(lua_State *L)			/** time() */
+{
+	time_t t = time(NULL);
+	if ((time_t)-1 == t)
+		return pusherror(L, "time");
+	lua_pushnumber(L, t);
+	return 1;
+}
+
+static int Plocaltime(lua_State *L)		/** localtime([time]) */
+{
+	struct tm res;
+	time_t t = luaL_optint(L, 1, time(NULL));
+	if (localtime_r(&t, &res) == NULL)
+		return pusherror(L, "localtime");
+	lua_createtable(L, 0, 9);
+	lua_pushnumber(L, res.tm_sec);
+	lua_setfield(L, -2, "sec");
+	lua_pushnumber(L, res.tm_min);
+	lua_setfield(L, -2, "min");
+	lua_pushnumber(L, res.tm_hour);
+	lua_setfield(L, -2, "hour");
+	lua_pushnumber(L, res.tm_mday);
+	lua_setfield(L, -2, "monthday");
+	lua_pushnumber(L, res.tm_mon + 1);
+	lua_setfield(L, -2, "month");
+	lua_pushnumber(L, res.tm_year + 1900);
+	lua_setfield(L, -2, "year");
+	lua_pushnumber(L, res.tm_wday);
+	lua_setfield(L, -2, "weekday");
+	lua_pushnumber(L, res.tm_yday);
+	lua_setfield(L, -2, "yearday");
+	lua_pushboolean(L, res.tm_isdst);
+	lua_setfield(L, -2, "is_dst");
+	return 1;
+}
+
+
+static int Pgmtime(lua_State *L)		/** gmtime([time]) */
+{
+	struct tm res;
+	time_t t = luaL_optint(L, 1, time(NULL));
+	if (gmtime_r(&t, &res) == NULL)
+		return pusherror(L, "localtime");
+	lua_createtable(L, 0, 9);
+	lua_pushnumber(L, res.tm_sec);
+	lua_setfield(L, -2, "sec");
+	lua_pushnumber(L, res.tm_min);
+	lua_setfield(L, -2, "min");
+	lua_pushnumber(L, res.tm_hour);
+	lua_setfield(L, -2, "hour");
+	lua_pushnumber(L, res.tm_mday);
+	lua_setfield(L, -2, "monthday");
+	lua_pushnumber(L, res.tm_mon + 1);
+	lua_setfield(L, -2, "month");
+	lua_pushnumber(L, res.tm_year + 1900);
+	lua_setfield(L, -2, "year");
+	lua_pushnumber(L, res.tm_wday);
+	lua_setfield(L, -2, "weekday");
+	lua_pushnumber(L, res.tm_yday);
+	lua_setfield(L, -2, "yearday");
+	lua_pushboolean(L, res.tm_isdst);
+	lua_setfield(L, -2, "is_dst");
+	return 1;
+}
+
+static int get_clk_id_const(const char *str)
+{
+	if (str == NULL)
+		return CLOCK_REALTIME;
+	else if (strcmp(str, "monotonic") == 0)
+		return CLOCK_MONOTONIC;
+	else if (strcmp(str, "process_cputime_id") == 0)
+		return CLOCK_PROCESS_CPUTIME_ID;
+	else if (strcmp(str, "thread_cputime_id") == 0)
+		return CLOCK_THREAD_CPUTIME_ID;
+	else
+		return CLOCK_REALTIME;
+}
+
+static int Pclock_getres(lua_State *L)		/** clock_getres([clockid]) */
+{
+	struct timespec res;
+	const char *str = lua_tostring(L, 1);
+	if (clock_getres(get_clk_id_const(str), &res) == -1)
+		return pusherror(L, "clock_getres");
+	lua_pushnumber(L, res.tv_sec);
+	lua_pushnumber(L, res.tv_nsec);
+	return 2;
+}
+
+static int Pclock_gettime(lua_State *L)		/** clock_gettime([clockid]) */
+{
+	struct timespec res;
+	const char *str = lua_tostring(L, 1);
+	if (clock_gettime(get_clk_id_const(str), &res) == -1)
+		return pusherror(L, "clock_gettime");
+	lua_pushnumber(L, res.tv_sec);
+	lua_pushnumber(L, res.tv_nsec);
+	return 2;
+}
+
+static int Pstrftime(lua_State *L)		/** strftime(format, [time]) */
+{
+	char tmp[256];
+	const char *format = luaL_checkstring(L, 1);
+
+	struct tm t;
+	if (lua_istable(L, 2)) {
+		lua_getfield(L, 2, "sec");
+		t.tm_sec = luaL_optint(L, -1, 0);
+		lua_pop(L, 1);
+		lua_getfield(L, 2, "min");
+		t.tm_min = luaL_optint(L, -1, 0);
+		lua_pop(L, 1);
+		lua_getfield(L, 2, "hour");
+		t.tm_hour = luaL_optint(L, -1, 0);
+		lua_pop(L, 1);
+		lua_getfield(L, 2, "monthday");
+		t.tm_mday = luaL_optint(L, -1, 0);
+		lua_pop(L, 1);
+		lua_getfield(L, 2, "month");
+		t.tm_mon = luaL_optint(L, -1, 0);
+		lua_pop(L, 1);
+		lua_getfield(L, 2, "year");
+		t.tm_year = luaL_optint(L, -1, 0);
+		lua_pop(L, 1);
+		lua_getfield(L, 2, "weekday");
+		t.tm_wday = luaL_optint(L, -1, 0);
+		lua_pop(L, 1);
+		lua_getfield(L, 2, "yearday");
+		t.tm_yday = luaL_optint(L, -1, 0);
+		lua_pop(L, 1);
+		lua_getfield(L, 2, "is_dst");
+		t.tm_isdst = lua_tointeger(L, -1);
+		lua_pop(L, 1);
+	} else {
+		time_t now = time(NULL);
+		localtime_r(&now, &t);
+	}
+
+	strftime(tmp, sizeof(tmp), format, &t);
+	lua_pushlstring(L, tmp, strlen(tmp));
+	return 1;
+}
+
 
 static const luaL_reg R[] =
 {
@@ -1013,6 +1296,9 @@ static const luaL_reg R[] =
 	{"chdir",		Pchdir},
 	{"chmod",		Pchmod},
 	{"chown",		Pchown},
+	{"clock_getres",	Pclock_getres},
+	{"clock_gettime",	Pclock_gettime},
+	{"crypt",		Pcrypt},
 	{"ctermid",		Pctermid},
 	{"dirname",		Pdirname},
 	{"dir",			Pdir},
@@ -1020,6 +1306,7 @@ static const luaL_reg R[] =
 	{"errno",		Perrno},
 	{"exec",		Pexec},
 	{"execp",		Pexecp},
+	{"fdopen",		Pfdopen},
 	{"fileno",		Pfileno},
 	{"files",		Pfiles},
 	{"fork",		Pfork},
@@ -1029,10 +1316,14 @@ static const luaL_reg R[] =
 	{"getlogin",		Pgetlogin},
 	{"getpasswd",		Pgetpasswd},
 	{"getpid",		Pgetpid},
+	{"getrlimit",		Pgetrlimit},
+	{"gettimeofday",	Pgettimeofday},
 	{"glob",		Pglob},
+	{"gmtime",		Pgmtime},
 	{"hostid",		Phostid},
 	{"kill",		Pkill},
 	{"link",		Plink},
+	{"localtime",		Plocaltime},
 	{"mkdir",		Pmkdir},
 	{"mkfifo",		Pmkfifo},
 	{"pathconf",		Ppathconf},
@@ -1042,9 +1333,12 @@ static const luaL_reg R[] =
 	{"rpoll",		Ppoll},
 	{"setenv",		Psetenv},
 	{"setpid",		Psetpid},
+	{"setrlimit",		Psetrlimit},
 	{"sleep",		Psleep},
 	{"stat",		Pstat},
+	{"strftime",		Pstrftime},
 	{"sysconf",		Psysconf},
+	{"time",		Ptime},
 	{"times",		Ptimes},
 	{"ttyname",		Pttyname},
 	{"unlink",		Punlink},
@@ -1057,6 +1351,7 @@ static const luaL_reg R[] =
 	{"openlog",		Popenlog},
 	{"syslog",		Psyslog},
 	{"closelog",		Pcloselog},
+	{"setlogmask",		Psetlogmask},
 #endif
 
 	{NULL,			NULL}
@@ -1069,7 +1364,7 @@ static const luaL_reg R[] =
 
 LUALIB_API int luaopen_posix (lua_State *L)
 {
-	luaL_openlib(L,MYNAME,R,0);
+	luaL_register(L,MYNAME,R);
 	lua_pushliteral(L,"version");		/** version */
 	lua_pushliteral(L,MYVERSION);
 	lua_settable(L,-3);
