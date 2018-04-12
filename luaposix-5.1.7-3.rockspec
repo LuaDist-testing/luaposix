@@ -1,10 +1,10 @@
 -- This file was automatically generated for the LuaDist project.
 
 package="luaposix"
-version="5.1.7-2"
+version="5.1.7-3"
 -- LuaDist source
 source = {
-  tag = "5.1.7-2",
+  tag = "5.1.7-3",
   url = "git://github.com/LuaDist-testing/luaposix.git"
 }
 -- Original source
@@ -44,4 +44,5 @@ build = {
          },
       },
    },
+   copy_directories = { "tests" }
 }
