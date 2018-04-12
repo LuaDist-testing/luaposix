@@ -1,5 +1,5 @@
 # DO NOT EDIT! GENERATED AUTOMATICALLY!
-# Copyright (C) 2002-2012 Free Software Foundation, Inc.
+# Copyright (C) 2002-2011 Free Software Foundation, Inc.
 #
 # This file is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -38,20 +38,7 @@ AC_DEFUN([gl_EARLY],
   m4_pattern_allow([^gl_LIBOBJS$])dnl a variable
   m4_pattern_allow([^gl_LTLIBOBJS$])dnl a variable
   AC_REQUIRE([gl_PROG_AR_RANLIB])
-  # Code from module extensions:
-  AC_REQUIRE([gl_USE_SYSTEM_EXTENSIONS])
-  # Code from module include_next:
   # Code from module manywarnings:
-  # Code from module msvc-inval:
-  # Code from module multiarch:
-  # Code from module raise:
-  # Code from module sigaction:
-  # Code from module signal-h:
-  # Code from module sigprocmask:
-  # Code from module snippet/arg-nonnull:
-  # Code from module snippet/c++defs:
-  # Code from module snippet/warn-on-use:
-  # Code from module stdint:
   # Code from module warnings:
 ])
 
@@ -69,31 +56,6 @@ AC_DEFUN([gl_INIT],
   m4_pushdef([gl_LIBSOURCES_DIR], [])
   gl_COMMON
   gl_source_base='lib'
-gl_MSVC_INVAL
-if test $HAVE_MSVC_INVALID_PARAMETER_HANDLER = 1; then
-  AC_LIBOBJ([msvc-inval])
-fi
-gl_MULTIARCH
-gl_FUNC_RAISE
-if test $HAVE_RAISE = 0 || test $REPLACE_RAISE = 1; then
-  AC_LIBOBJ([raise])
-  gl_PREREQ_RAISE
-fi
-gl_SIGNAL_MODULE_INDICATOR([raise])
-gl_SIGACTION
-if test $HAVE_SIGACTION = 0; then
-  AC_LIBOBJ([sigaction])
-  gl_PREREQ_SIGACTION
-fi
-gl_SIGNAL_MODULE_INDICATOR([sigaction])
-gl_SIGNAL_H
-gl_SIGNALBLOCKING
-if test $HAVE_POSIX_SIGNALBLOCKING = 0; then
-  AC_LIBOBJ([sigprocmask])
-  gl_PREREQ_SIGPROCMASK
-fi
-gl_SIGNAL_MODULE_INDICATOR([sigprocmask])
-gl_STDINT_H
 AC_SUBST([WARN_CFLAGS])
   # End of code from modules
   m4_ifval(gl_LIBSOURCES_LIST, [
@@ -231,32 +193,10 @@ AC_DEFUN([gltests_LIBSOURCES], [
 # This macro records the list of files which have been installed by
 # gnulib-tool and may be removed by future gnulib-tool invocations.
 AC_DEFUN([gl_FILE_LIST], [
-  build-aux/snippet/arg-nonnull.h
-  build-aux/snippet/c++defs.h
-  build-aux/snippet/warn-on-use.h
   lib/dummy.c
-  lib/msvc-inval.c
-  lib/msvc-inval.h
-  lib/raise.c
-  lib/sig-handler.h
-  lib/sigaction.c
-  lib/signal.in.h
-  lib/sigprocmask.c
-  lib/stdint.in.h
   m4/00gnulib.m4
-  m4/extensions.m4
   m4/gnulib-common.m4
-  m4/include_next.m4
-  m4/longlong.m4
   m4/manywarnings.m4
-  m4/msvc-inval.m4
-  m4/multiarch.m4
   m4/onceonly.m4
-  m4/raise.m4
-  m4/sigaction.m4
-  m4/signal_h.m4
-  m4/signalblocking.m4
-  m4/stdint.m4
-  m4/warn-on-use.m4
   m4/warnings.m4
 ])
