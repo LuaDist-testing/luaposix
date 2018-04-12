@@ -266,6 +266,9 @@
 # define __GNUC_STDC_INLINE__ 1
 #endif
 
+/* Define to `int' if <sys/types.h> does not define. */
+#undef pid_t
+
 /* Define to the equivalent of the C99 'restrict' keyword, or to
    nothing if this is not supported.  Do not define if restrict is
    supported directly.  */

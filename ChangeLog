@@ -1,3 +1,45 @@
+2011-09-13  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am, configure.ac: Don't build or install useless static
+	libs or versioned symlinks.
+
+2011-09-11  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am, make_lcurses_doc.pl: Update curses documentation for
+	luaposix integration.
+
+2011-09-10  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am, README, configure.ac: configury: don’t try to guess
+	install paths.  Remove machinery for guessing non-standardized install paths, and
+	instead expand documentation so it covers the standard Debian/Ubuntu
+	case.
+
+2011-09-09  Reuben Thomas <rrt@sc3d.org>
+
+	* .gitignore: .gitignore: Add distribution tarball.
+
+2011-09-09  Reuben Thomas <rrt@sc3d.org>
+
+	* : Merge pull request #10 from
+	gvvaughan/pull-request/refactor-lookup_symbol-mappings refactor: lookup_symbol mappings with macro splicing
+
+2011-09-09  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am, tests-posix.lua: Makefile.am: fix make distcheck.
+
+2011-09-09  Reuben Thomas <rrt@sc3d.org>
+
+	* .gitignore: .gitignore: Add *.html and ChangeLog.
+
+2011-09-09  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am: Distribute tests.
+
+2011-09-09  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am: Distribute strlcpy.c.
+
 2011-09-09  Reuben Thomas <rrt@sc3d.org>
 
 	* Makefile.am, configure.ac: configury: Make building curses
