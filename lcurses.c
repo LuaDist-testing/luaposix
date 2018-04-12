@@ -24,22 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                *
  ************************************************************************/
 
-#include "config.h"
+#include <config.h>
 
 #include <stdlib.h>
 #include <string.h>
 #include <lua.h>
 #include <lauxlib.h>
 #include "lua52compat.h"
-#if defined(HAVE_NCURSESW_CURSES_H)
+#if HAVE_NCURSESW_CURSES_H
 #  include <ncursesw/curses.h>
-#elif defined(HAVE_NCURSESW_H)
+#elif HAVE_NCURSESW_H
 #  include <ncursesw.h>
-#elif defined(HAVE_NCURSES_CURSES_H)
+#elif HAVE_NCURSES_CURSES_H
 #  include <ncurses/curses.h>
-#elif defined(HAVE_NCURSES_H)
+#elif HAVE_NCURSES_H
 #  include <ncurses.h>
-#elif defined(HAVE_CURSES_H)
+#elif HAVE_CURSES_H
 #  include <curses.h>
 #else
 #  error "SysV or X/Open-compatible Curses header file required"
@@ -803,6 +803,19 @@ static int Wmove_derived(lua_State *L)
     int par_y = luaL_checkint(L, 2);
     int par_x = luaL_checkint(L, 3);
     lua_pushboolean(L, B(mvderwin(w, par_y, par_x)));
+    return 1;
+}
+
+static int Wresize(lua_State *L)
+{
+    WINDOW *w = checkwin(L, 1);
+    int height = luaL_checkint(L, 2);
+    int width = luaL_checkint(L, 3);
+
+    int c = wresize(w, height, width);
+    if (c == ERR) return 0;
+
+    lua_pushboolean(L, B(true));
     return 1;
 }
 
@@ -1828,6 +1841,7 @@ static const luaL_Reg windowlib[] =
     MENTRY( Wderive		),
     MENTRY( Wmove_window	),
     MENTRY( Wmove_derived	),
+    MENTRY( Wresize		),
     MENTRY( Wclone		),
     MENTRY( Wsyncup		),
     MENTRY( Wsyncdown		),
