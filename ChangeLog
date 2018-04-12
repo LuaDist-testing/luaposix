@@ -1,3 +1,213 @@
+2012-09-03  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac: Bump version to 5.1.21.
+
+2012-09-01  Reuben Thomas <rrt@sc3d.org>
+
+	* README: README: Add link to online HTML docs.
+
+2012-09-01  Reuben Thomas <rrt@sc3d.org>
+
+	* README: README: Update location of repo and contact details.
+
+2012-08-31  Reuben Thomas <rrt@sc3d.org>
+
+	* bootstrap.conf: bootstrap.conf: no longer require now-defunct
+	`missing' script.
+
+2012-08-30  Reuben Thomas <rrt@sc3d.org>
+
+	* .gitignore, Makefile.am, README, config.ld, examples/dir.lua,
+	examples/fork.lua, examples/fork2.lua, examples/getopt.lua,
+	examples/glob.lua, examples/limit.lua, examples/poll.lua,
+	examples/signal.lua, lposix.c: Add docstrings (using Steve Donovan's
+	ldoc) to lposix.c The documentation comes from from Steve Donovan and the Alpine Linux
+	wiki (Natanael Copa).  Reindent Psignal, which was a bit out of order.  Make rpoll use file descriptors, not Lua file objects, so it can be
+	used with both (via fileno).
+
+2012-06-28  Reuben Thomas <rrt@sc3d.org>
+
+	* README: Document dependency on bitop library with Lua 5.1 (thanks
+	to Bernd Eggink).
+
+2012-06-28  Reuben Thomas <rrt@sc3d.org>
+
+	* README: Remove documentation of configure options, one of which
+	was obsolete.
+
+2012-06-22  Reuben Thomas <rrt@sc3d.org>
+
+	* lcurses.c, lposix.c, lua52compat.h: Simplify Lua 5.2 compatibility
+
+2012-06-22  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: lposix.c: revert to using MYNAME, as it is different
+	from PACKAGE.
+
+2012-06-22  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am: build: don't unset LUA_INIT, as it may be needed to
+	set Lua paths.
+
+2012-06-22  Reuben Thomas <rrt@sc3d.org>
+
+	* README: Update bug reporting advice (thanks, Yuri Takhteyev).
+
+2012-06-21  Reuben Thomas <rrt@sc3d.org>
+
+	* tests-posix.lua: Fix some incorrectly-named references to posix
+	module.
+
+2012-06-21  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Simplify construction of messages with autoconf
+	variables.
+
+2012-06-05  Reuben Thomas <rrt@sc3d.org>
+
+	* bootstrap.conf: build: don't include non-MIT-licensed dummy.c from
+	gnulib (fixes issue #42).
+
+2012-06-04  Reuben Thomas <rrt@sc3d.org>
+
+	* : Merge pull request #41 from gvvaughan/pull-request/timer-macros gettimeofday: change format to a table with sec and usec fields.
+
+2012-05-29  Gary V. Vaughan <gary@gnu.org>
+
+	* lposix.c, tests-posix.lua: gettimeofday: change format to a table
+	with sec and usec fields.  * lposix.c (Pgettimeofday): Return a single table with sec and usec
+	fields, rather than a pair of numbers.  (Ptimeradd, Ptimercmp, Ptimersub): New functions to emulate the
+	macros timeradd, timercmp and timersub respectively.
+
+2012-05-29  Reuben Thomas <rrt@sc3d.org>
+
+	* : Merge pull request #40 from
+	gvvaughan/pull-request/feature-tests-not-version-checks crypt: this function is available on darwin, but no crypt.h header
+	is
+
+2012-05-29  Gary V. Vaughan <gary@gnu.org>
+
+	* configure.ac, lposix.c: crypt: this function is available on
+	darwin, but no crypt.h header is One of the main principles of Autoconf is that you should test for
+	features, not for versions - exactly because of compilation problems
+	like this, where Apple sets _POSIX_VERSION to make us think that
+	crypt.h is available, but there is no crypt.h header.  * configure.ac (crypt.h): Test for presence of this header.  (crypt): If the crypt function is available, whether or not the
+	additional -lcrypt library is required, define HAVE_CRYPT.  * lposix.c (crypt.h): Include it if configure found it.  (Pcrypt): Define it if configure detected a system crypt API.  (R): List Pcrypt, if we defined it earlier.
+
+2012-05-28  Reuben Thomas <rrt@sc3d.org>
+
+	* posix.lua: posix.lua: update call of posix.open to match new API.
+
+2012-05-28  Reuben Thomas <rrt@sc3d.org>
+
+	* posix.lua: Add missing posix suffix to a call of access.
+
+2012-05-28  Reuben Thomas <rrt@sc3d.org>
+
+	* : Merge pull request #39 from stevedonovan/master Implement signal queue so signals arriving while in a Lua signal
+	handler are not lost.
+
+2012-05-23  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac: Bump version to 5.1.20.
+
+2012-05-23  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: getgroup: fix an off-by-one error (thanks, Steve
+	Donovan)
+
+2012-05-23  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: lposix.c: more minor whitespace fixes
+
+2012-05-23  Reuben Thomas <rrt@sc3d.org>
+
+	* posix.lua: posix.lua: add a missing space (whitespace fix).
+
+2012-05-23  Reuben Thomas <rrt@sc3d.org>
+
+	* posix.lua: system: Kill the fork if execp fails (thanks, Steve
+	Donovan)
+
+2012-05-23  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: lposix.c: require a mode for open with O_CREAT, and only
+	then.
+
+2012-05-23  Reuben Thomas <rrt@sc3d.org>
+
+	* tests-posix.lua: tests: update for revised open API.
+
+2012-05-23  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: lposix.c: minor whitespace fixes.
+
+2012-05-23  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: lposix.c: make file & creation flags public; pass flags
+	to open as an integer mask, not a table.
+
+2012-05-22  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Fix some comments.
+
+2012-05-21  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac, lposix.c: Remove non-POSIX crypt_r and replace
+	function checks with POSIX version checks.
+
+2012-05-21  Reuben Thomas <rrt@sc3d.org>
+
+	* README: Add a pointer to documentation and some basic coding
+	principles.
+
+2012-05-13  Reuben Thomas <rrt@sc3d.org>
+
+	* README: Update web site URL and be more explicit about system
+	requirements.
+
+2012-04-11  Alexander V. Nikolaev <avn@daemon.hole.ru>
+
+	* tests-posix.lua: Rework test for glob() -- use temporary directory This allow us to not depend from *.la files from build.
+
+2012-04-11  Alexander V. Nikolaev <avn@daemon.hole.ru>
+
+	* tests-posix.lua: Simple tests for mkdtemp and mkstemp
+
+2012-05-11  Your Name <7hemroc@gmail.com>
+
+	* lposix.c: Add mkdtemp()
+
+2012-04-11  Alexander V. Nikolaev <avn@daemon.hole.ru>
+
+	* lposix.c: Memory leak in mkstemp Pmkstemp not release temporary string buffer, if mkstemp() raise an
+	error
+
+2012-05-12  Reuben Thomas <rrt@sc3d.org>
+
+	* : Merge pull request #35 from likema/master Add statvfs and crypt_r.
+
+2012-05-02  Reuben Thomas <rrt@sc3d.org>
+
+	* strlcpy.c: strlcpy.c: add prototype to squash compiler warning.
+
+2012-05-02  Reuben Thomas <rrt@sc3d.org>
+
+	* strlcpy.c: strlcpy.c: Make function declaration ANSI.
+
+2012-05-01  Like Ma <likemartinma@gmail.com>
+
+	* configure.ac: Add AC_USE_SYSTEM_EXTENSIONS to configure.ac for
+	define _GNU_SOURCE in config.h.in
+
+2012-04-23  Like Ma <likemartinma@gmail.com>
+
+	* : Merge remote-tracking branch 'upstream/master'
+
+2012-04-10  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac: Bump version to 5.1.19.
+
 2012-04-10  Reuben Thomas <rrt@sc3d.org>
 
 	* strlcpy.c: Replace LGPLed strlcpy with BSD licensed strlcpy, from
@@ -91,6 +301,15 @@
 2012-02-12  Reuben Thomas <rrt@sc3d.org>
 
 	* : Merge pull request #28 from likema/HEAD~~ Use AC_SEARCH_LIBS instead of AC_CHECK_LIBS in configure.ac.
+
+2012-02-12  Like Ma <likemartinma@gmail.com>
+
+	* configure.ac, lposix.c, tests-posix.lua: Add statvfs
+
+2012-02-12  Like Ma <likemartinma@gmail.com>
+
+	* configure.ac: Use AC_SEARCH_LIBS instead of AC_CHECK_LIBS to fix
+	function crypt not found when configuring.
 
 2012-02-11  Reuben Thomas <rrt@sc3d.org>
 
