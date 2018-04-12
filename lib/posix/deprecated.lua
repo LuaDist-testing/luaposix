@@ -1,6 +1,6 @@
 --[[
  POSIX library for Lua 5.1, 5.2 & 5.3.
- Copyright (C) 2014-2016 Gary V. Vaughan
+ Copyright (C) 2014-2017 Gary V. Vaughan
 ]]
 --[[--
  Legacy Lua POSIX bindings.
@@ -394,7 +394,7 @@ end
 -- @tparam[opt=current group] int|string group id or group name
 -- @treturn group group information
 -- @usage
---   print (P.getgroup (P.getgid ()).name)
+--   print (posix.getgroup (posix.getgid ()).name)
 
 local grp    = require "posix.grp"
 local unistd = require "posix.unistd"
@@ -436,8 +436,8 @@ end
 -- @string ... field names, each one of "uid", "name", "gid", "passwd",
 --   "dir" or "shell"
 -- @return ... values, or a table of all fields if *user* is `nil`
--- @usage for a,b in pairs (P.getpasswd "root") do print (a, b) end
--- @usage print (P.getpasswd ("root", "shell"))
+-- @usage for a,b in pairs (posix.getpasswd "root") do print (a, b) end
+-- @usage print (posix.getpasswd ("root", "shell"))
 
 local pwd    = require "posix.pwd"
 local unistd = require "posix.unistd"
@@ -486,8 +486,8 @@ end
 -- @string[opt] ... unless *type* was a table, zero or more additional
 --   type strings
 -- @return ... values, or a table of all fields if no option given
--- @usage for a,b in pairs (P.getpid ()) do print (a, b) end
--- @usage print (P.getpid ("uid", "euid"))
+-- @usage for a,b in pairs (posix.getpid ()) do print (a, b) end
+-- @usage print (posix.getpid ("uid", "euid"))
 
 local unistd = require "posix.unistd"
 
@@ -743,9 +743,9 @@ end
 -- @string[opt] option any combination of 'c' (directly to system console
 --   if an error sending), 'n' (no delay) and 'p' (show PID)
 -- @int [opt=`LOG_USER`] facility one of `LOG_AUTH`, `LOG_AUTHORITY`,
---   `LOG_CRON`, `LOG_DAEMON`, `LOG_FTP`, `LOG_KERN`, `LOG_LPR`, `LOG_MAIL`,
---   `LOG_NEWS`, `LOG_SECURITY`, `LOG_SYSLOG`, `LOG_USER`, `LOG_UUCP` or
---   `LOG_LOCAL0` through `LOG_LOCAL7`
+--   `LOG_CRON`, `LOG_DAEMON`, `LOG_KERN`, `LOG_LPR`, `LOG_MAIL`,
+--   `LOG_NEWS`, `LOG_SECURITY`, `LOG_USER`, `LOG_UUCP` or `LOG_LOCAL0`
+--   through `LOG_LOCAL7`
 -- @see syslog(3)
 
 local bit = require "bit32"
@@ -799,7 +799,7 @@ end
 --   type strings
 -- @return ... values, or a table of all fields if no option given
 -- @see sysconf(2)
--- @usage for a,b in pairs (P.pathconf "/dev/tty") do print (a, b) end
+-- @usage for a,b in pairs (posix.pathconf "/dev/tty") do print (a, b) end
 
 local unistd = require "posix.unistd"
 
@@ -1076,8 +1076,8 @@ end
 --   type strings
 -- @return ... values, or a table of all fields if no option given
 -- @see sysconf(2)
--- @usage for a,b in pairs (P.sysconf ()) do print (a, b) end
--- @usage print (P.sysconf ("STREAM_MAX", "ARG_MAX"))
+-- @usage for a,b in pairs (posix.sysconf ()) do print (a, b) end
+-- @usage print (posix.sysconf ("STREAM_MAX", "ARG_MAX"))
 
 local unistd = require "posix.unistd"
 
@@ -1091,6 +1091,7 @@ local function sysconf (...)
     JOB_CONTROL = _sysconf (unistd._SC_JOB_CONTROL),
     NGROUPS_MAX = _sysconf (unistd._SC_NGROUPS_MAX),
     OPEN_MAX    = _sysconf (unistd._SC_OPEN_MAX),
+    PAGESIZE    = _sysconf (unistd._SC_PAGESIZE),
     SAVED_IDS   = _sysconf (unistd._SC_SAVED_IDS),
     STREAM_MAX  = _sysconf (unistd._SC_STREAM_MAX),
     TZNAME_MAX  = _sysconf (unistd._SC_TZNAME_MAX),
@@ -1116,8 +1117,8 @@ end
 --   key strings.
 -- @return values, or a table of all fields if no keys given
 -- @see times(2)
--- @usage for a,b in pairs(P.times ()) do print (a, b) end
--- @usage print (P.times ("utime", "elapsed")
+-- @usage for a,b in pairs(posix.times ()) do print (a, b) end
+-- @usage print (posix.times ("utime", "elapsed")
 
 local tms = require "posix.sys.times"
 

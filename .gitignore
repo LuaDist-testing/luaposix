@@ -1,0 +1,13 @@
+*~
+*.o
+*.so
+*.rockspec
+*.src.rock
+/ChangeLog
+/COPYING
+/Makefile
+/build-aux/config.ld
+/luaposix-*.rockspec
+!/luaposix-git-*.rockspec
+/luaposix-*.tar.gz
+/TAGS

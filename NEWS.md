@@ -1,5 +1,65 @@
 # luaposix NEWS - User visible changes
 
+## Noteworthy changes in release 34.0.1 (2017-07-09) [stable]
+
+### Bugs Fixed
+
+  - `posix.sys.socket` works correctly on macOS again.
+
+  - `posix.sys.socket` abstract namespaces work correctly on Linux.
+
+  - `posix.syslog.openlog` keeps a copy of it's ident parameter string
+    in the Lua registry to ensure we don't hang on to a dangling
+    pointer.
+
+  - latest `build-aux/luke` and upgraded lukefile work correctly on
+    macOS now.
+
+
+## Noteworthy changes in release 34.0 (2017-05-06) [stable]
+
+### Incompatible Changes
+
+  - `posix.syslog` constants `LOG_AUTHPRIV`, `LOG_FTP` and `LOG_SYSLOG`
+    are no longer documented, and only defined when supported by the
+    host C library.  They are not part of the POSIX API, and prevented
+    compilation of luaposix on AIX and Solaris.
+
+  - `getopt.getopt` was a binding to the GNU `getopt_long` extension,
+    which is not a POSIX API, and prevents luaposix from compiling on
+    hosts that do not provide the extended API.  Instead we now correctly
+    bind POSIX getopt(3) in `posix.unistd`.
+
+    If you still have code that uses the old non-POSIX binding, then
+    LuaRocks has the Lua only `alt-getopt` module which is very similar,
+    and works even when the host C library has no `getopt_long` API;
+    alternatively, you should consider migrating to the far more
+    powerful Lua-only `optparse` library, also available from LuaRocks.
+
+### New Features
+
+  - Replaced all Autotools and supporting Slingshot code with new Lua-
+    based `build-aux/luke` and `lukefile` describing how to compile and
+    install everything.  Building with LuaRocks now leverages this too.
+
+  - New `posix.sys.socket.getsockopt` and `posix.sys.socket.getpeername`
+    bindings.
+
+  - New `posix.sys.msg.msgctl` binding, and `posix.sys.msg.IPC_RMID`,
+    `posix.sys.msg.IPC_SET` and `posix.sys.msg.IPC_STAT` constants to
+    use with it.
+
+  - New `posix.unistd.ftruncate` and `posix.unistd.truncate` bindings.
+
+  - `posix.fcntl.fcntl` now accepts undocumented `posix.fcntl.O_TMPFILE`
+    value where supported by the host C library.
+
+### Bugs Fixed
+
+  - `posix.unistd.ttyname` now returns an error message in addition to
+    `nil` when it fails.
+
+
 ## Noteworthy changes in release 33.4.0 (2016-02-27) [stable]
 
 ### Incompatible Changes
