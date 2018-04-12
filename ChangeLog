@@ -1,3 +1,362 @@
+2012-02-12  Reuben Thomas <rrt@sc3d.org>
+
+	* : Merge pull request #28 from likema/HEAD~~ Use AC_SEARCH_LIBS instead of AC_CHECK_LIBS in configure.ac.
+
+2012-02-11  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Fix bug in chmod (closes issue #55).
+
+2012-02-11  Reuben Thomas <rrt@sc3d.org>
+
+	* m4/ax_with_curses.m4: Update ax_with_curses.m4.
+
+2012-02-03  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Remove some non-POSIX features.
+
+2012-02-03  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Remove non-standard memrchr.
+
+2012-02-02  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Fix signal handling so all signals are handled, one at a
+	time.
+
+2012-02-01  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: lposix.c: overhaul time struct functions; add mktime.
+
+2012-02-01  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: lposix.c: fix whitespace typo.
+
+2012-02-01  Reuben Thomas <rrt@sc3d.org>
+
+	* lcurses.c, lposix.c: Overhaul use of numeric types going to Lua.  Use lua_pushinteger rather than lua_pushnumber where it makes sense.  In lcurses, use lua_pushboolean for all boolean quantities, and
+	always return Lua booleans, not C booleans. Remove some unused
+	function macros.
+
+2012-02-01  Reuben Thomas <rrt@sc3d.org>
+
+	* posix.lua: Fix a docstring mistake: refer to os.execute, not
+	os.system.
+
+2012-01-31  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac: Remove setting _POSIX_C_SOURCE on Darwin, as
+	apparently this only restricts APIs, or instates obsolescent APIs.  Remove some pointless quotes.
+
+2012-01-31  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Remove SIGPROF and SIGPOLL, which are marked
+	obsolescent.
+
+2012-01-27  Reuben Thomas <rrt@sc3d.org>
+
+	* lcurses.c, m4/ax_with_curses.m4: curses: update ax_with_curses.m4
+	to latest version.
+
+2012-01-17  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: In strftime, make isdst optional like all other fields.
+
+2012-01-17  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Add strptime.
+
+2012-01-17  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Simplify a lua_pushlstring call to a lua_pushstring
+	call.
+
+2012-01-17  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Simplify hostid, making it return a number, not a
+	string.
+
+2012-01-17  Reuben Thomas <rrt@sc3d.org>
+
+	* : Merge pull request #23 from hishamhm/master Add support of octal stat modes in mode_munch
+
+2011-12-29  Hisham Muhammad <hisham@gobolinux.org>
+
+	* lposix.c: Add support of octal stat modes in mode_munch
+
+2011-12-28  Reuben Thomas <rrt@sc3d.org>
+
+	* README: Update and make precise the versions of Lua catered to.
+
+2011-12-28  Reuben Thomas <rrt@sc3d.org>
+
+	* lcurses.c, lposix.c, lua52compat.h: Move Lua 5.2 compatibility
+	into a separate file; use it in lcurses.c.  Change version check to be “== 502” rather than “> 501” now
+	that 5.2 is released and we have no idea what 5.3 or later will
+	bring.
+
+2011-12-28  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Remove unused lua_setenv macro.
+
+2011-12-28  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Add memrchr.
+
+2011-12-28  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Add a comment explaining that posix.signal has sensible
+	semantics.
+
+2011-12-26  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Fix an egregious bug in the previous commit which only
+	updated a Lua handler when the previous handler was also a Lua
+	function.
+
+2011-12-26  Reuben Thomas <rrt@sc3d.org>
+
+	* : Merge pull request #22 from
+	gvvaughan/pull-request/expose-use_default_colors Pull request/expose use default colors
+
+2011-12-27  Gary V. Vaughan <gary@gnu.org>
+
+	* lcurses.c: curses: expose use_default_colors to lua.  * lcurses.c (Cuse_default_colors): Marshalling for
+	use_default_colors.  (curseslib): Add it.
+
+2011-12-27  Gary V. Vaughan <gary@gnu.org>
+
+	* lcurses.c: refactor: use lposix-style macro splicing in lcurses.  Make the style of lcurses.c more like lposix.c, with the aid of
+	splice and stringify macros, and judicious renaming to make their
+	usage pattern the same too.  * lcurses.c (LCURSES_SPLICE, LCURSES_STR, LCURSES_STR_1): Analagous
+	to LPOSIX_SPLICE, LPOSIX_STR and LPOSIX_STR_1 respectively.  (LC_NUMBER, LC_NUMBER2, LC_STRING, LC_STRING2, LC_BOOL) (LC_BOOL2, LC_BOOLOK, LC_BOOLOK2): Change prefix of generated
+	functions from `lc_' to `C' so that LCURSES_STR_1 can be used
+	idiomatically.  (LCW_BOOLOK): Likewise, only changing from `lcw_' to `W' prefix.  (LCW_BOOLOK2): New macre used when the curses symbol and the lua api
+	have different names.  (lcw_new, lcw_get, lcw_check, lc_checkch, lc_optch): Rename from
+	these...  (lc_newwin, lc_getwin, lc_checkwin, checkch, optch): ...to these,
+	respectively, no need to namespace static symbols so carefully.
+	Adjust all callers.  (CC2): Remove.  (CF): New macro for generating FN key exports into lua. Use it to
+	export all 64 valid FN keys.  (LCW_WIN2): New macro.  (Wsyncup, Wcursyncup, Wsyncdown): Use it to define these functions.  (LCW_WIN2YX): New macro.  (Wgetyx, Wgetparyx, Wgetbegyx, getmaxyx): Use it to define these
+	functions.  (LC_ATTROK): New macro.  (Cslk_attron, Cslk_attroff, Cslk_attrset): Use it to define these
+	functions.  (LC_TOGGLEOK): New macro.  (Ccbreak, Cecho, Craw, Cnl): Use it to define these functions.  (LCW_WINBOOLOK): New macro.  (Wintrflush, Wmeta, Wnodelay, Widlok, Wleaveok, Wscrollok): Use it
+	to define these functions.  (LCW_WININTOK): New macro.  (Wattroff, Wattron, Wattrset): Use it to define these functions.  (chstrlib, windowlib, curseslib): Much simplified by naming
+	implementation functions more carefully, and defining temporary
+	MENTRY macro to expand and splice arguments that populate the
+	tables.
+
+2011-12-26  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: signal: Cope with C handler functions.  Fix a bug in setting symbolic (SIG_IGN/DFL) handlers.  Make setting handler to nil indistinguishable from setting to
+	SIG_DFL.
+
+2011-12-24  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Explain why we don’t use an upvalue in an obvious
+	situation.
+
+2011-12-24  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Redo signal API to be more conventional, allowing signal
+	handlers to be reset (no __newindex nonsense).
+
+2011-12-24  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Use LPOSIX_STR_1 to prevent premature expansion of
+	signal handler macro names.
+
+2011-12-24  Reuben Thomas <rrt@sc3d.org>
+
+	* : Merge pull request #20 from
+	gvvaughan/pull-request/use-cpp-to-keep-symbols-in-sync refactor: use macro splicing for more tabulation.
+
+2011-12-23  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Allow signal handlers to be set to nil (unset), as well
+	as a function or macro.
+
+2011-12-23  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac: Bump version to 5.1.16.
+
+2011-12-23  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Clarify a NULL pointer.
+
+2011-12-23  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Remove non-POSIX SIG_IGN and SIG_HOLD.
+
+2011-12-23  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Fix some deviant indentation.
+
+2011-11-18  Reuben Thomas <rrt@sc3d.org>
+
+	* : Merge pull request #19 from spbnick/master Fix corner cases in Pread and Pgetgroups. Thanks to Nikolai
+	Kondrashov.
+
+2011-11-17  Nikolai Kondrashov <nkondrashov@nvidia.com>
+
+	* lposix.c: Handle and report Pread allocation errors properly Report Pread buffer allocation errors with pusherror, account for
+	allocation functions which don't modify errno.  Handle allocation of
+	zero bytes in Pread properly: don't consider returned NULL an error.
+	Add some "air" into Pread formatting.
+
+2011-10-27  Reuben Thomas <rrt@sc3d.org>
+
+	* : Merge pull request #18 from ittner/fix-unused-var Remove unused variable (thanks, Alexandre Ittner).
+
+2011-10-27  Alexandre Erwin Ittner <alexandre@ittner.com.br>
+
+	* lposix.c: Remove unused variable in the poll interface
+
+2011-10-27  Alexandre Erwin Ittner <alexandre@ittner.com.br>
+
+	* lposix.c, tests-posix.lua: Add function fnmatch() According to
+
+	http://pubs.opengroup.org/onlinepubs/9699919799/functions/fnmatch.htmlplus GNU extensions (if available)
+
+2011-10-25  Reuben Thomas <rrt@sc3d.org>
+
+	* : Merge pull request #16 from spbnick/master Add full poll(2) interface
+
+2011-10-06  Alexander V. Nikolaev <avn@daemon.hole.ru>
+
+	* lposix.c: Don't leave status uninitialized SUSv4 states that &status is undefined if WNOHANG option is passed
+	to waitpid and no processes are ready to be collected at the time of
+	call.
+
+2011-10-06  Alexander V. Nikolaev <avn@daemon.hole.ru>
+
+	* lposix.c, tests-posix.lua: Fix bug -- posix.read returns wrong
+	value Pread() is documented to return a single value, and pushed only one
+	return value to stack, but it told Lua that it returns two values.  Note that this change may existing workarounds and should be
+	explicitly mentioned in release notes.
+
+2011-10-10  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c, tests-fcntl.lua: Expose new fcntl function (oops!) and
+	rewrite tests to use it.
+
+2011-10-09  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am: tests: Call fcntl tests with lunit (fixes issue #13);
+	thanks Mikhail Gusarov.
+
+2011-10-09  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Rewrite fcntl support.  * Remove fcntl table and special handlers for F_GET/SETFL.  * Add instead a single fcntl functions, with constants for all the   standard commands except for the file-locking commands (this would   require support for struct flock).
+
+2011-09-29  Reuben Thomas <rrt@sc3d.org>
+
+	* luaposix.rockspec.in: rockspec: move distribution & home page to
+	github
+
+2011-09-29  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am: Makefile.am: update to latest woger
+
+2011-09-29  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac: Bump version to 5.1.15.
+
+2011-09-29  Reuben Thomas <rrt@sc3d.org>
+
+	* test_fcntl.lua, tests-fcntl.lua: tests: rename test_fcntl.lua ->
+	tests-fcntl.lua for consistency
+
+2011-09-29  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am: tests: fix Lua paths and xargs usage to run tests
+	correctly
+
+2011-09-23  Reuben Thomas <rrt@sc3d.org>
+
+	* bootstrap.conf: Fix license.
+
+2011-09-29  Reuben Thomas <rrt@sc3d.org>
+
+	* : Merge pull request #11 from avnik/feature-pipe-and-dup2 Add dup, pipe & more, from avnik. Thanks!
+
+2011-09-25  Alexander V. Nikolaev <avn@daemon.hole.ru>
+
+	* lposix.c: Add setfl/getfl Access to functionality of fcntl(fd, F_GETFL) and fcntl(fd, F_SETFL,
+	arg)
+
+2011-09-20  Alexander V. Nikolaev <avn@daemon.hole.ru>
+
+	* lposix.c: Export WNOHANG to lua and pass options to wait
+
+2011-09-17  Alexander V. Nikolaev <avn@daemon.hole.ru>
+
+	* lposix.c, tests-posix.lua: Add pipe() and test
+
+2011-09-17  Alexander V. Nikolaev <avn@daemon.hole.ru>
+
+	* lposix.c: Add dup/dup2 functions
+
+2011-09-23  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am: Makefile.am: replace literal name of package with
+	$(PACKAGE) once more.
+
+2011-09-19  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am: Makefile.am: fix deps of the rockspec.
+
+2011-09-19  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am: Makefile.am: make release message shorter and more
+	precise.
+
+2011-09-19  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am: Use $PACKAGE instead of luaposix.
+
+2011-09-19  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am: Fix distribution of rockspec source.
+
+2011-09-19  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac: Bump version to 5.1.14.
+
+2011-09-19  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Make some symbolic constants case-insensitive in Lua.
+
+2011-09-19  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac: configure.ac: use $PACKAGE rather than spelling out
+	the name.
+
+2011-09-19  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am: Makefile.am: actually make rockspec on release
+
+2011-09-17  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am: Makefile.am: fixes for building with rockspec.  Don’t put the fully expanded rockspec in EXTRA_DIST, as this
+	creates a recursive dependency (on the distribution archive).  Fix the extraction of the summary description from the rockspec.  Whitespace fixes to reminder output at end of make release.
+
+2011-09-17  Reuben Thomas <rrt@sc3d.org>
+
+	* luaposix.rockspec.in: rockspec: Find a remaining non-parametrized
+	reference to the package name.
+
+2011-09-17  Reuben Thomas <rrt@sc3d.org>
+
+	* .gitignore, Makefile.am, configure.ac, luaposix.rockspec.in: 
+	rockspec: auto-generate (except for part of download URL, argh).
+
+2011-09-16  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac: Bump version to 5.1.13.
+
+2011-09-16  Reuben Thomas <rrt@sc3d.org>
+
+	* tests-posix.lua: tests-posix.lua: Fix glob test again; we seem to
+	have no .o files, so use .la files.
+
 2011-09-13  Reuben Thomas <rrt@sc3d.org>
 
 	* Makefile.am, configure.ac: Don't build or install useless static

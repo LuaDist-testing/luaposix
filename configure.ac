@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script
 
-AC_INIT(luaposix, 5.1.15, rrt@sc3d.org)
+AC_INIT(luaposix, 5.1.18, rrt@sc3d.org)
 AC_CONFIG_AUX_DIR([build-aux])
 
 AM_INIT_AUTOMAKE([-Wall -Werror std-options])
@@ -74,22 +74,19 @@ gl_INIT
 dnl Check for header files
 AC_HEADER_STDC
 
+dnl Search libs
+AC_SEARCH_LIBS(crypt, crypt)
+
 dnl Check for functions
 AC_CHECK_FUNCS([strlcpy])
 AC_CHECK_FUNCS([crypt])
-if test $ac_cv_func_crypt = no; then
-  # crypt is not in the default libraries, try libcrypt.  FIXME: anywhere else?
-  AC_CHECK_LIB([crypt], [crypt], [LIBS="$LIBS -lcrypt"])
-fi
 
 dnl Compiler flags for POSIX
 dnl Get this from autotools/gnulib
-if test Darwin = `uname`; then
-  POSIX_EXTRA_CFLAGS=-D_POSIX_C_SOURCE
-else
+if test Darwin != `uname`; then
   # FIXME: Make -lrt conditional on _XOPEN_REALTIME
   POSIX_EXTRA_CFLAGS=-D_XOPEN_SOURCE=700
-  POSIX_EXTRA_LDFLAGS="-lrt"
+  POSIX_EXTRA_LDFLAGS=-lrt
 fi
 AC_SUBST(POSIX_EXTRA_CFLAGS)
 AC_SUBST(POSIX_EXTRA_LDFLAGS)
@@ -104,10 +101,10 @@ AC_ARG_VAR(CURSES_LIB, [linker flags for curses library])
 AC_SUBST(WANTEDLIBS)
 AC_SUBST(WANTEDLUA)
 
-dnl Lua 5.1
-AX_PROG_LUA(501)
+dnl Lua 5.1 or 5.2
+AX_PROG_LUA(501, 503)
 AX_LUA_HEADERS
-AX_LUA_HEADERS_VERSION(501)
+AX_LUA_HEADERS_VERSION(501, 503)
 AC_SUBST(LUA)
 AC_SUBST(LUA_INCLUDE)
 

@@ -101,6 +101,17 @@ for f in ox.files"." do
   local g=assert(ox.getgroup(T.gid))
   print(T.mode,p.name.."/"..g.name,T.size,os.date("%b %d %H:%M",T.mtime),f,T.type)
 end
+------------------------------------------------------------------------------
+testing"fnmatch"
+assert(ox.fnmatch("test", "test"))
+assert(ox.fnmatch("tes*", "test"))
+assert(ox.fnmatch("tes*", "tes"))
+assert(ox.fnmatch("tes*", "test2"))
+assert(ox.fnmatch("tes?", "test"))
+assert(ox.fnmatch("tes?", "tes") == false)
+assert(ox.fnmatch("tes?", "test2") == false)
+assert(ox.fnmatch("*test", "/test", ox.FNM_PATHNAME) == false)
+assert(ox.fnmatch("*test", ".test", ox.FNM_PERIOD) == false)
 
 ------------------------------------------------------------------------------
 testing"glob"
@@ -201,8 +212,7 @@ prtab( ox.pathconf(".") );
 testing "pipe"
 local rpipe, wpipe = ox.pipe()
 ox.write(wpipe, "test")
-local testdata_len, testdata = ox.read(rpipe, 4)
-assert(testdata_len == 4)
+local testdata = ox.read(rpipe, 4)
 assert(testdata == "test")
 ox.close(rpipe)
 ox.close(wpipe)
