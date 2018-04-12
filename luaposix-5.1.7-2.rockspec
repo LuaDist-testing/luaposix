@@ -1,10 +1,10 @@
 -- This file was automatically generated for the LuaDist project.
 
 package="luaposix"
-version="5.1.7-1"
+version="5.1.7-2"
 -- LuaDist source
 source = {
-  tag = "5.1.7-1",
+  tag = "5.1.7-2",
   url = "git://github.com/LuaDist-testing/luaposix.git"
 }
 -- Original source
@@ -29,8 +29,19 @@ dependencies = {
 }
 
 build = {
-   type = "module",
+   type = "builtin",
    modules = {
-      posix = "lposix.c"
-   }
+      posix = {
+         sources = "lposix.c",
+      },
+   },
+   platforms = {
+      linux = {
+         modules = {
+            posix = {
+               libraries = { "crypt", "rt" },
+            },
+         },
+      },
+   },
 }
