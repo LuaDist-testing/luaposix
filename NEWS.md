@@ -1,56 +1,5 @@
 # luaposix NEWS - User visible changes
 
-
-## Noteworthy changes in release 34.0.4 (2018-02-20) [stable]
-
-### Bugs Fixed
-
-  - `posix.time.clock_getres`, `posix.time.clock_gettime`
-    `posix.time.CLOCK_MONOTONIC`, `posix.time.CLOCK_REALTIME`,
-    `posix.time.CLOCK_PROCESS_CPUTIME_ID` and
-    `posix.time.CLOCK_THREAD_CPUTIME_ID` are all properly elided
-    on macOS again.
-
-  - `spec/spec_helper.lua` now looks in the correct objdir
-    for object modules built by luke, instead of hard-coding
-    `./linux/?.so`, so specl examples work on macOS and others
-    again.
-
-
-## Noteworthy changes in release 34.0.3 (2018-02-19) [stable]
-
-### Bugs Fixed
-
-  - `posix.deprecated.fadvise` is properly elided on macOS and other
-    hosts that have no `posix.fcntl.posix_fadvise` implementation.
-
-
-## Noteworthy changes in release 34.0.2 (2018-02-17) [stable]
-
-### Incompatible Changes
-
-  - `require 'posix'` (or any of its submodules) always returns a
-    populated module table, but no longer sets `_G.posix` or any
-    other global symbol on Lua 5.1 (including LuaJIT).  If you were
-    relying on this behaviour, please change your require statments
-    to an assignment:
-
-    ```lua
-    local posix = require 'posix'
-    ```
-
-### Bugs Fixed
-
-  - `posix.sys.wait.wait` returns `<childpid>, "running"` when the
-    child has not exited yet, and `wait` was called with `WNOHANG`
-    set.
-
-  - specs don't fail on valid -1 return values from `posix.sysconf`.
-
-  - loading posix (or any of its submodules) no longer leaks symbols
-    into the global namespace on Lua 5.1 (including LuaJIT).
-
-
 ## Noteworthy changes in release 34.0.1 (2017-07-09) [stable]
 
 ### Bugs Fixed

@@ -1,25 +1,20 @@
-#! /usr/bin/env lua
-
 -- limit.lua
 -- Limiting the CPU time used by a child process;
 -- it will be killed and we don't get the final message
 
-local M = require 'posix.sys.resource'
+local posix = require 'posix'
 
+posix.setrlimit ('cpu',1,1)
 
-local times = require 'posix.sys.times'.times
+local t = posix.times 'elapsed'
 
-M.setrlimit (M.RLIMIT_CPU, {rlim_cur=1, rlim_max=1})
-
-local t = times().elapsed
-
-local pid = require 'posix.unistd'.fork ()
+local pid = posix.fork ()
 if pid == 0 then -- child
-   print 'start'
-   for i = 1, 1e9 do
-   end
-   print 'finish'
+  print 'start'
+  for i = 1, 1e9 do
+  end
+  print 'finish'
 else
-   print (require 'posix.sys.wait'.wait (pid))
-   print (times().elapsed - t)
+  print (posix.wait (pid))
+  print (posix.times 'elapsed' - t)
 end
