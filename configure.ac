@@ -1,9 +1,9 @@
 dnl Process this file with autoconf to produce a configure script
 
-AC_INIT(luaposix, 5.1.22, rrt@sc3d.org)
+AC_INIT(luaposix, 5.1.23, rrt@sc3d.org)
 AC_CONFIG_AUX_DIR([build-aux])
 
-AM_INIT_AUTOMAKE([-Wall -Werror std-options])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
@@ -123,5 +123,5 @@ dnl Generate output files
 AC_CONFIG_MACRO_DIR(m4)
 AC_CONFIG_HEADER(config.h)
 AC_SUBST(PACKAGE) # so that automake can dependencies for ${PACKAGE}.rockspec
-AC_CONFIG_FILES(Makefile lib/Makefile ${PACKAGE}.rockspec)
+AC_CONFIG_FILES(Makefile lib/Makefile ${PACKAGE}.rockspec luarocks-config.lua)
 AC_OUTPUT

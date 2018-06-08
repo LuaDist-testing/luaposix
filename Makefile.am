@@ -39,8 +39,14 @@ ROCKSPEC = $(PACKAGE)-$(VERSION)-1.rockspec
 $(ROCKSPEC): $(PACKAGE).rockspec dist
 	sed -e 's/@MD5@/'`$(MD5SUM) $(distdir).tar.gz | cut -d " " -f 1`'/g' < $(PACKAGE).rockspec > $@
 
-EXTRA_DIST =				\
+dist_doc_DATA = 			\
 	$(HTML)				\
+	docs/index.html			\
+	docs/ldoc.css
+examplesdir = $(docdir)/examples
+examples_DATA = $(wildcard examples/*.lua)
+
+EXTRA_DIST =				\
 	$(LUATESTS)			\
 	$(LUNITTESTS)			\
 	make_lcurses_doc.pl		\
@@ -60,9 +66,18 @@ check-local:
 	ls $(LUATESTS) | $(LUA_ENV) xargs -L 1 $(LUA)
 	ls $(LUNITTESTS) | $(LUA_ENV) xargs -L 1 lunit --interpreter $(LUA)
 
-release: distcheck $(ROCKSPEC)
+prerelease: distcheck
 	git diff --exit-code && \
-	git push && \
-	woger lua,github package=$(PACKAGE) package_name=$(PACKAGE_NAME) version=$(VERSION) description="`LUA_INIT= LUA_PATH='$(abs_srcdir)/?.rockspec.in' $(LUA) -l$(PACKAGE) -e 'print (description.summary)'`" notes=release-notes-$(VERSION) dist_type="tar.gz" github_user=rrthomas && \
+	git push
+
+WOGER_ARGS = package=$(PACKAGE) package_name=$(PACKAGE_NAME) version=$(VERSION) description="`LUA_INIT= LUA_PATH='$(abs_srcdir)/?.rockspec.in' $(LUA) -l$(PACKAGE) -e 'print (description.summary)'`" notes=release-notes-$(VERSION) dist_type="tar.gz" github_user=rrthomas
+
+# Should also upload the rock, but currently github-upload is broken
+#woger github $(WOGER_ARGS) &&
+check-luarock: prerelease
+	LUAROCKS_CONFIG=$(abs_srcdir)/luarocks-config.lua luarocks --tree=$(abs_srcdir)/luarocks build $(ROCKSPEC)
+
+release: check-luarock
+	woger lua $(WOGER_ARGS) && \
 	git tag -a -m "Release tag" v$(VERSION) && \
 	git push --tags

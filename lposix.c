@@ -51,7 +51,6 @@
 #define MYNAME		"posix"
 #define MYVERSION	MYNAME " library for " LUA_VERSION " / " VERSION
 
-#define LUA_COMPAT_ALL
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
@@ -816,7 +815,7 @@ static int Pmkfifo(lua_State *L)
 Create a unique temporary file.
 @function mkstemp
 @see mkstemp(3)
-@string templ pattern that ends in six 'X' characters
+@string templ pattern that ends in "XXXXXX"
 @return file descriptor, nil otherwise
 @return name on success, error otherwise
 @usage posix.mkstemp 'wooXXXXXX'
