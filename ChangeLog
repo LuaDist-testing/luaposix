@@ -1,3 +1,274 @@
+2013-02-15  Reuben Thomas <rrt@sc3d.org>
+
+	* rockspecs.lua: rockspecs.lua: don't need to turn dots in version
+	into dashes to get release tag.
+
+2013-02-15  Reuben Thomas <rrt@sc3d.org>
+
+	* .gitignore: .gitignore: remove tarball pattern, as we no longer
+	have tarballs.
+
+2013-02-15  Reuben Thomas <rrt@sc3d.org>
+
+	* posix.lua, rockspecs.lua, tests-fcntl.lua, tests-posix.lua: Revert
+	31671409e62e: bit32 doesn't build with Lua 5.2, so require luabitop
+	instead.
+
+2013-02-15  Reuben Thomas <rrt@sc3d.org>
+
+	* rockspecs.lua: rockspecs.lua: fix a misnamed variable
+
+2013-02-15  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac, luaposix.rockspec.in, mkrockspecs.lua,
+	rockspecs.lua: configury: add rockspec-generating files for
+	git/release rockspecs.
+
+2013-02-15  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am: Makefile.am: remove obsolete definition of ROCKSPEC
+
+2013-02-15  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac: configure.ac: remove useless AC_SUBST calls for
+	precious variables.
+
+2013-02-15  Reuben Thomas <rrt@sc3d.org>
+
+	* tests-posix.lua: tests-posix.lua: remove a debugging line.
+
+2013-02-15  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: lposix.c: correct cross-reference to getopt.lua
+
+2013-02-15  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac: Bump version down to 5.1.24: we haven't made such a
+	release yet
+
+2013-02-15  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am, configure.ac: configury: update for releasing on
+	'release' branch of github rather than via tarballs.
+
+2013-02-15  Reuben Thomas <rrt@sc3d.org>
+
+	* m4/ax_lua.m4: Update ax_lua.m4 to latest: no code changes,
+	formatting only.
+
+2013-02-15  Reuben Thomas <rrt@sc3d.org>
+
+	* tests-posix.lua: tests-posix.lua: remove commented-out test for
+	non-POSIX putenv function
+
+2013-02-15  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Add STD{IN,OUT,ERR}_FILENO constants.
+
+2013-02-15  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c, tests-posix.lua: Add isatty.
+
+2013-02-12  Reuben Thomas <rrt@sc3d.org>
+
+	* luaposix.rockspec.in, posix.lua, tests-fcntl.lua, tests-posix.lua: 
+	Use bit32 (now available for 5.1) rather than luabitop: slightly
+	simplifies things.
+
+2013-02-11  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: lposix.c: Reuben Thomas is no longer the maintainer.
+
+2013-02-07  Reuben Thomas <rrt@sc3d.org>
+
+	* m4/ax_compare_version.m4: m4/ax_compare_version.m4: add support
+	file for ax_lua.m4
+
+2013-02-06  Alexander V. Nikolaev <avn@daemon.hole.ru>
+
+	* : Merge pull request #61 from
+	gvvaughan/pull-request/maint-clean-ldocs-output configury: clean up ldoc droppings with make maintainer-clean
+
+2013-02-06  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac, m4/ax_lua.m4: configury: update ax_lua.m4 to latest
+	version, which simplifies configure.ac slightly.
+
+2013-01-29  Gary V. Vaughan <gary@gnu.org>
+
+	* Makefile.am, bootstrap.conf, configure.ac: gnulib: no need to link
+	always empty libgnu.  Now that we have no C modules from gnulib, there's no need to build
+	and link the always empty library any more.  * Makefile.am (SUBDIRS): Remove.  * configure.ac (AC_CONFIG_FILES): Remove lib/Makefile.  * bootstrap.conf (gnulib_tool_options): Add --avoid=dummy to skip
+	the one remaining empty gnulib C source file.  (luaposix_remove_empty_lib): gnulib-tool now generates a useless lib
+	subdirectory containing just a Makefile.am and .gitignore. We don't
+	use or need it any more, so delete it.  (luaposix_finish): Don't copy dummy.c out of gnulib.
+
+2013-01-29  Gary V. Vaughan <gary@gnu.org>
+
+	* Makefile.am: configury: clean up ldoc droppings with make
+	maintainer-clean * Makefile.am (MAINTAINERCLEANFILES): Add docs/index.html and
+	docs/ldoc.css.
+
+2013-01-26  Alexander V. Nikolaev <avn@daemon.hole.ru>
+
+	* : Merge pull request #59 from
+	gvvaughan/pull-request/handle-missing-ldoc configury: handle missing ldoc binary.
+
+2013-01-10  Reuben Thomas <rrt@sc3d.org>
+
+	* : Merge pull request #56 from
+	gvvaughan/pull-request/curses-resizeterm-support curses: conditional resizeterm support.
+
+2013-01-10  Reuben Thomas <rrt@sc3d.org>
+
+	* : Merge pull request #53 from
+	gvvaughan/pull-request/remove-automake-werror configury: remove automake -Werror option.
+
+2013-01-10  Reuben Thomas <rrt@sc3d.org>
+
+	* : Merge pull request #50 from
+	gvvaughan/pull-request/keep-gnulib-revision-under-version-control configury: keep gnulib revision under version control.
+
+2013-01-10  Reuben Thomas <rrt@sc3d.org>
+
+	* : Merge pull request #54 from
+	gvvaughan/pull-request/no-need-for-lt-output configury: no need to fork for libtool.m4 variables.
+
+2013-01-10  Gary V. Vaughan <gary@gnu.org>
+
+	* lcurses.c: curses: don't waddstr() each string twice.  Fix a bug introduced by commit 5aa297512.  * lcurses.c (Waddstr): Only add the string one time!
+
+2013-01-10  Gary V. Vaughan <gary@gnu.org>
+
+	* configure.ac: configury: no need to fork for libtool.m4 variables.  libtool.m4 is expanded into configure already, so the values are
+	available after LT_INIT in configure.in without creating config.lt
+	to copy the values we already have into an early libtool script, and
+	then fork again to grep the content of those copies back into
+	configure!!  (LT_OUTPUT is only necessary if you need to run
+	configure time compilation tests using the libtool script to wrap
+	the actual compiler).  * configure.ac (LT_OUTPUT): Remove.  (shrext): shrext_cmds is already set by LT_INIT, so just use it
+	without calling the early libtool script.
+
+2013-01-10  Gary V. Vaughan <gary@gnu.org>
+
+	* configure.ac: configury: remove automake -Werror option.  This option causes automake to bail out after warning about the use
+	of gmake extensions.  * configure.ac (AM_INIT_AUTOMAKE): Remove -Werror.
+
+2013-01-10  Gary V. Vaughan <gary@gnu.org>
+
+	* bootstrap: bootstrap: sync with upstream.  This revision fixes some small bugs, and is compatible with non-gnu
+	awk and non-gnu sed again.  * bootstrap: sync with upstream.
+
+2013-01-10  Gary V. Vaughan <gary@gnu.org>
+
+	* .gitignore, gnulib: configury: keep gnulib revision under version
+	control.  It's important to keep the gnulib revision number used by any
+	particular checkout of luaposix under version control rather than
+	hoping that whatever the current HEAD is will work.  * .gitignore: Remove gnulib.  * gnulib: Add current master revision.
+
+2013-01-10  Gary V. Vaughan <gary@gnu.org>
+
+	* configure.ac: configury: use AM_PROG_AR for automake 1.13.  * configure.ac (AM_PROG_AR): Required by recent automake releases,
+	but not available in very old releases.
+
+2012-12-24  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac: configure.ac: fix regeneration of luaposix.rockspec
+
+2012-12-23  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac: configure.ac: fix a comment
+
+2012-12-23  Reuben Thomas <rrt@sc3d.org>
+
+	* luaposix.rockspec.in: luaposix.rockspec.in: remove redundant dir
+	setting
+
+2012-12-15  Alexander V. Nikolaev <avn@daemon.hole.ru>
+
+	* configure.ac: configure.ac: bump version to 5.1.25
+
+2012-12-15  Alexander V. Nikolaev <avn@daemon.hole.ru>
+
+	* luaposix.rockspec.in: rockspec: Add missing dependency for
+	luabitop luaposix depends on bitop library on lua 5.1 since luaposix 5.1.16
+
+2012-12-05  Alexander V. Nikolaev <avn@daemon.hole.ru>
+
+	* : Merge pull request #48 from
+	Keen-github/vs/2230/fix_hack_for_luaposix_compatibility Added 'day' field for compatibility to Lua os.date(); fixed issue
+	#32.
+
+2012-10-25  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Use lstat to read size of a link (for Preadlink); fixes
+	issue #47.
+
+2012-10-17  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac: configure.ac: bump version to 5.1.24
+
+2012-10-17  Reuben Thomas <rrt@sc3d.org>
+
+	* lcurses.c: lcurses.c: don't run strlen unnecessarily; w[mv]addstr
+	does that anyway
+
+2012-10-04  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am: Makefile.am: now that github-upload is fixed,
+	consolidate release into a single target
+
+2012-10-04  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am: Makefile.am: correct github_user parameter to woger
+	(thanks, Liam)
+
+2012-10-04  Reuben Thomas <rrt@sc3d.org>
+
+	* .gitignore, Makefile.am, luarocks-config.lua.in: release:
+	luarocks-related tweaks
+
+2012-10-04  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am: Makefile.am: make check-luarock depend on the
+	rockspec, as github seems to work after all
+
+2012-10-04  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am, configure.ac: release: automatically check the
+	rockspec before making a release
+
+2012-10-03  Reuben Thomas <rrt@sc3d.org>
+
+	* lcurses.c, lposix.c, lua52compat.h: Make Lua 5.2-compatibility
+	more Lua 5.2-ish.
+
+2012-10-03  Reuben Thomas <rrt@sc3d.org>
+
+	* tree.lua: tree.lua: make Lua 5.2-compatible
+
+2012-09-26  Reuben Thomas <rrt@sc3d.org>
+
+	* luaposix.rockspec.in: rockspec: make build_command more robust
+
+2012-09-26  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am, configure.ac, examples/poll.lua,
+	luaposix.rockspec.in: build: install documentation with 'make
+	install' and from luarocks
+
+2012-09-23  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: lposix.c: improve comment of mkstemp
+
+2012-09-21  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac: configure.ac: bump version to 5.1.23
+
+2012-09-20  Reuben Thomas <rrt@sc3d.org>
+
+	* lcurses.c: lcurses.c: define LUA_COMPAT_ALL to get luaL_register.
+
 2012-09-13  Reuben Thomas <rrt@sc3d.org>
 
 	* dummy.c: dummy.c: fix copyright notice to be public domain

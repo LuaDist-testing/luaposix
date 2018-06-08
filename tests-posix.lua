@@ -138,7 +138,7 @@ assert(ox.fnmatch("*test", "/test", ox.FNM_PATHNAME) == false)
 assert(ox.fnmatch("*test", ".test", ox.FNM_PERIOD) == false)
 
 ------------------------------------------------------------------------------
-testing"mkdtemp,mkstemp,glob"
+testing"mkdtemp,mkstemp,glob,isatty"
 local tmpdir=ox.getenv("TMPDIR") or "/tmp"
 local testdir,err=ox.mkdtemp(tmpdir.."/luaposix-test-XXXXXX")
 assert(testdir, err)
@@ -161,6 +161,7 @@ assert(st.size==5)
 -- ... then read and compare
 first_fd, err =ox.open(first_filename, ox.O_RDONLY)
 assert(first_fd, err)
+assert(not ox.isatty(first_fd))
 assert(ox.read(first_fd, 5) == "12345")
 local second_fd,second_filename=ox.mkstemp(filename_template)
 assert(second_filename)
@@ -270,7 +271,6 @@ f"xxx"
 function f(x) print(ox.getpasswd(x,"name"),ox.getpasswd(x,"shell")) end
 f()
 f(nil)
---ox.putenv"USER=root"
 ox.setenv("USER","root")
 f(ox.getenv"USER")
 
