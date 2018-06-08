@@ -1,17 +1,17 @@
 -- This file was automatically generated for the LuaDist project.
 
 package="luaposix"
-version="5.1.19-1"
+version="5.1.21-1"
 -- LuaDist source
 source = {
-  tag = "5.1.19-1",
+  tag = "5.1.21-1",
   url = "git://github.com/LuaDist-testing/luaposix.git"
 }
 -- Original source
 -- source = {
---   url = "https://github.com/downloads/rrthomas/luaposix/luaposix-5.1.19.tar.gz",
---   md5 = "3d74beb1b1d887adb689e6e9316abb42",
---   dir = "luaposix-5.1.19"
+--   url = "https://github.com/downloads/luaposix/luaposix/luaposix-5.1.21.tar.gz",
+--   md5 = "7bc06747199f6bd2994ed5a7b2bdf089",
+--   dir = "luaposix-5.1.21"
 -- }
 description = {
   summary = "Lua bindings for POSIX (including curses)",
@@ -20,7 +20,7 @@ description = {
       POSIX is the IEEE Portable Operating System Interface standard.
       luaposix is based on lposix and lcurses.
    ]],
-  homepage = "http://github.com/rrthomas/luaposix/",
+  homepage = "http://github.com/luaposix/luaposix/",
   license = "MIT/X11"
 }
 dependencies = {

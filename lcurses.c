@@ -30,6 +30,7 @@
 #include <string.h>
 #include <lua.h>
 #include <lauxlib.h>
+#include "lua52compat.h"
 #if defined(HAVE_NCURSESW_CURSES_H)
 #  include <ncursesw/curses.h>
 #elif defined(HAVE_NCURSESW_H)
@@ -44,7 +45,6 @@
 #  error "SysV or X/Open-compatible Curses header file required"
 #endif
 #include <term.h>
-#include "lua52compat.h"
 
 /* The extra indirection to these macros is required so that if the
    arguments are themselves macros, they will get expanded too.  */
@@ -200,13 +200,13 @@ static int W__tostring(lua_State *L)
 static chtype checkch(lua_State *L, int offset)
 {
     if (lua_type(L, offset) == LUA_TNUMBER)
-        return (chtype)luaL_checknumber(L, offset);
+        return luaL_checknumber(L, offset);
     if (lua_type(L, offset) == LUA_TSTRING)
         return *lua_tostring(L, offset);
 
     luaL_typerror(L, offset, "chtype");
     /* never executes */
-    return (chtype)0;
+    return 0;
 }
 
 static chtype optch(lua_State *L, int offset, chtype def)
@@ -281,7 +281,7 @@ static int chstr_set_str(lua_State *L)
     int offset = luaL_checkint(L, 2);
     const char *str = luaL_checkstring(L, 3);
     int len = lua_strlen(L, 3);
-    int attr = (chtype)luaL_optnumber(L, 4, A_NORMAL);
+    int attr = luaL_optnumber(L, 4, A_NORMAL);
     int rep = luaL_optint(L, 5, 1);
     int i;
 
@@ -322,7 +322,7 @@ static int chstr_set_ch(lua_State *L)
     chstr* cs = checkchstr(L, 1);
     int offset = luaL_checkint(L, 2);
     chtype ch = checkch(L, 3);
-    int attr = (chtype)luaL_optnumber(L, 4, A_NORMAL);
+    int attr = luaL_optnumber(L, 4, A_NORMAL);
     int rep = luaL_optint(L, 5, 1);
 
     while (rep-- > 0)
@@ -1356,7 +1356,7 @@ static int Wcopywin(lua_State *L)
 
 static int Cunctrl(lua_State *L)
 {
-    chtype c = (chtype)luaL_checknumber(L, 1);
+    chtype c = luaL_checknumber(L, 1);
     lua_pushstring(L, unctrl(c));
     return 1;
 }
@@ -1794,7 +1794,7 @@ static int Ctigetstr (lua_State *L)
 ** =======================================================
 */
 /* chstr members */
-static const luaL_reg chstrlib[] =
+static const luaL_Reg chstrlib[] =
 {
 #define MENTRY(_f) { LCURSES_STR(_f), LCURSES_SPLICE(chstr_, _f) }
     MENTRY( len		),
@@ -1807,7 +1807,7 @@ static const luaL_reg chstrlib[] =
     { NULL, NULL }
 };
 
-static const luaL_reg windowlib[] =
+static const luaL_Reg windowlib[] =
 {
 #define MENTRY(_f) { LCURSES_STR_1(_f), (_f) }
     /* window */
@@ -1958,7 +1958,7 @@ static const luaL_reg windowlib[] =
     {NULL, NULL}
 };
 
-static const luaL_reg curseslib[] =
+static const luaL_Reg curseslib[] =
 {
 #define MENTRY(_f) { LCURSES_STR_1(_f), (_f) }
     /* chstr helper function */

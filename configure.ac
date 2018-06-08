@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script
 
-AC_INIT(luaposix, 5.1.19, rrt@sc3d.org)
+AC_INIT(luaposix, 5.1.21, rrt@sc3d.org)
 AC_CONFIG_AUX_DIR([build-aux])
 
 AM_INIT_AUTOMAKE([-Wall -Werror std-options])
@@ -11,6 +11,7 @@ dnl Check for programs
 AC_PROG_CC
 gl_EARLY
 
+AC_USE_SYSTEM_EXTENSIONS
 AC_ARG_ENABLE([gcc-warnings],
   [AS_HELP_STRING([--enable-gcc-warnings],
                   [turn on lots of GCC warnings (for developers)])],
@@ -73,13 +74,14 @@ gl_INIT
 
 dnl Check for header files
 AC_HEADER_STDC
+AC_CHECK_HEADERS([crypt.h sys/statvfs.h])
 
 dnl Search libs
-AC_SEARCH_LIBS(crypt, crypt)
+AC_SEARCH_LIBS([crypt], [crypt],
+  [AC_DEFINE([HAVE_CRYPT], [], [Define this if your system has a crypt() function])])
 
 dnl Check for functions
-AC_CHECK_FUNCS([strlcpy])
-AC_CHECK_FUNCS([crypt])
+AC_CHECK_FUNCS([strlcpy statvfs])
 
 dnl Compiler flags for POSIX
 dnl Get this from autotools/gnulib
