@@ -26,7 +26,7 @@ specify posix:
 
 - describe getopt:
   - context with bad arguments:
-      badargs.diagnose (posix.getopt, "(list, string, ?table, ?int, ?int)")
+      badargs.diagnose (posix.getopt, "(list, string, ?int, ?int)")
 
 
 - describe openpty:
@@ -478,9 +478,10 @@ specify posix:
   - describe glob:
     - before:
         chdir, glob, mkdtemp = posix.chdir, posix.glob, posix.mkdtemp
+        mkdir = posix.mkdir
 
     - context with bad arguments:
-        badargs.diagnose (glob, "(?string)")
+        badargs.diagnose (glob, "glob (?table|string)")
 
     - it matches files in the given directory:
         dir = mkdtemp (template)
@@ -491,8 +492,36 @@ specify posix:
         globlist, errmsg = glob "test.*"
         expect (errmsg).to_be (nil)
         expect (type (globlist)).to_be "table"
+        expect (globlist).to_equal {"test.1", "test.2"}
         rmtmp (dir)
 
+    - it matches files and directories in the given directory:
+        dir = mkdtemp (template)
+        touch (dir .. "/test.1")
+        chdir (dir)
+        mkdir ("foo")
+        mkdir ("bar")
+        globlist = glob()
+        expect (globlist).to_equal {"bar", "foo", "test.1"}
+        rmtmp (dir)
+
+    - it adds / to filenames if GLOB_MARK is true:
+        dir = mkdtemp (template)
+        chdir (dir)
+        mkdir ("foo")
+        mkdir ("bar")
+        globlist = glob({pattern="*", MARK=true})
+        expect (globlist).to_equal {"bar/", "foo/"}
+        rmtmp (dir)
+
+    - it does not add / to filenames if GLOB_MARK is false:
+        dir = mkdtemp (template)
+        chdir (dir)
+        mkdir ("foo")
+        mkdir ("bar")
+        globlist = glob({MARK=false})
+        expect (globlist).to_equal {"bar", "foo"}
+        rmtmp (dir)
 
   - describe files:
     - before:
@@ -769,16 +798,32 @@ specify posix:
 
 - specify terminal handling:
   - describe ttyname:
+    # Jump through some hoops on Travis, where ttyname(2) provokes EBADF
     - before:
-        ttyname = posix.ttyname
+        ttyname, typeerrors = init (posix, "ttyname")
+        r = pack(ttyname(2))
 
     - context with bad arguments:
-        badargs.diagnose (posix.ttyname, "(?int)")
+      - 'it diagnoses argument #1 type not int or nil':
+          expect (ttyname (false)).to_raise.any_of (typeerrors (1, "int or nil", "boolean"))
+      - 'it diagnoses argument #1 not a tty descriptor':
+          expect (ttyname (-1)).to_be (nil)
+      - it diagnoses too many arguments:
+          expect (ttyname (1, false)).to_raise.any_of (typeerrors (2))
 
-    - it takes a file descriptor argument:
-        expect (ttyname (2)).to_contain.any_of {"console", "pts", "tty"}
+    - it returns nil and an error string:
+        if r.n ~= 1 then
+          expect (r[1]).to_be (nil)
+          expect (type (r[2])).to_be "string"
+        end
     - it returns a string:
-        expect (type (ttyname (1))).to_be "string"
+        if r.n == 1 then
+          expect (type (r[1])).to_be "string"
+        end
+    - it takes a file descriptor argument:
+        if r.n == 1 then
+          expect (r[1]).to_contain.any_of {"console", "pts", "tty"}
+        end
     - it defaults the first argument to 0:
         expect (ttyname ()).to_be (ttyname (0))
 
