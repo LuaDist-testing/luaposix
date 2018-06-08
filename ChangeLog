@@ -1,43 +1,522 @@
-2008-07-18 Natanael Copa <natanael.copa _AT_ gmail.com>
-  * fix rpoll to ignore the POLLHUP and POLLNVAL reported at:
-    http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=491257
-  * added crypt(). Patch from dev.openwrt.org
+2011-09-09  Reuben Thomas <rrt@sc3d.org>
 
-2008-06-03 Natanael Copa <natanael.copa _AT_ gmail.com>
-  * replace luaL_openlib with the newer luaL_register.
-  * Support for building on Darwin/OSX. Patch from 
-    Felix Fietkau <nbd _AT_ openwrt.org>
+	* Makefile.am, configure.ac: configury: Make building curses
+	optional.
 
-2008-01-29 Natanael Copa <natanael.copa _AT_ gmail.com>
-  * added openlog(), syslog() and closelog()
-  * fixed dup() to handle lua files
-  * renamed exec() to execp() and added a new exec func that uses execv(3)
-  * added fileno()
+2011-09-09  Reuben Thomas <rrt@sc3d.org>
 
-2008-01-25  Natanael Copa <natanael.copa _AT_ gmail.com>
-  * created fork luaposix
-    o added poll() patch from:
-      http://lua-users.org/lists/lua-l/2007-11/msg00346.html
-    o cleaned up Makefile
+	* .gitignore, AUTHORS, Makefile.am, README, configure.ac,
+	curses.lua, lcurses.c, m4/ax_with_curses.m4, m4/ax_with_prog.m4,
+	make_lcurses_doc.pl, strlcpy.c, tests-curses.lua, tests-posix.lua,
+	tests.lua, tree.lua: Merge lcurses into luaposix.
 
-2006-10-12  Leo Razoumov <slonik.az _AT_ gmail.com>
-  * Starting with Luiz Henrique de Figueiredo (LHF) 2006-04-07 version of
-    lposix.c fixed the following problems when compiling for Lua-5.1 (Lua-5.1.x)
-    o Added missing functions to lposix.c: Prmdir, Punlink
-    o Restored older lposix-5.0 implementation of the following functions:
-      Pumask, Pchmod
-  * restored modemuncher.c from lposix-5.0 since April 2006 lposix.c version has broken
-    implementation of modemunch(...) function.
-  * Function Ptimes: wrong conversion of clock ticks to seconds. Replaced
-    scaling by CLOCKS_PER_SEC macro (that should never be used, btw) with 
-    POSIX compliant sysconf(_SC_CLK_TCK) value.
-  * Update test.lua and tree.lua to reflect lposix.c API changes
-  * Deleted posix.lua loader file not needed anymore in Lua-5.1 module system
-  * Remaining problems: Pumask does not take mask in octal form, it only
-    understand alphabetic notation like "u=rwx"
+2011-09-08  Reuben Thomas <rrt@sc3d.org>
 
-2006-10-16  Leo Razoumov <slonik.az _AT_ gmail.com>
-  * Added glob wrapper (Pglob) implementated by George <j4y54w _AT_ sawinski.de>
-    Created corresponding test.
-	
---EOF--
+	* : Merge pull request #9 from
+	gvvaughan/pull-request/tabulate-lookup_symbol-mappings bugfix: tabulate lookup_symbol mappings
+
+2011-09-08  Reuben Thomas <rrt@sc3d.org>
+
+	* : Merge pull request #8 from
+	gvvaughan/pull-request/add-libcrypt-if-required configury: add libcrypt if required
+
+2011-09-08  Reuben Thomas <rrt@sc3d.org>
+
+	* : Merge pull request #6 from
+	gvvaughan/pull-request/need-dummy-incase-gnulib-has-no-objects configury: need dummy module incase gnulib has no other objects
+
+2011-09-08  Reuben Thomas <rrt@sc3d.org>
+
+	* : Merge pull request #4 from
+	gvvaughan/pull-request/darwin-has-no-o-rsync-definition portability: darwin has no O_RSYNC definition
+
+2011-09-08  Gary V. Vaughan <gary@vaughan.pe>
+
+	* lposix.c: portability: darwin has no O_RSYNC definition
+
+2011-09-08  Gary V. Vaughan <gary@vaughan.pe>
+
+	* bootstrap.conf: configury: need dummy module incase gnulib has no
+	other objects It's only safe to use --avoid=dummy when there will never be a
+	libgnu.a built, i.e there are no other modules with C code, and thus
+	the parent project is never linked with libgnu.
+
+2011-09-08  Gary V. Vaughan <gary@vaughan.pe>
+
+	* .gitignore, bootstrap.conf, lib/.gitignore, m4/.gitignore: 
+	configury: let bootstrap.conf manage gnulib .gitignore No need to check these files in when bootstrap.conf has functions to
+	manage them automatically without creating merge conflicts.  For this changeset to work properly, you'll need to `git clean -f -x
+	-d` and then rerun bootstrap to generate a proper set of .gitignore
+	files.
+
+2011-09-08  Gary V. Vaughan <gary@vaughan.pe>
+
+	* configure.ac: configury: no m4 quotes in configure.ac Also, for the sake of forming good habits, keep the lvalua on the
+	left of a comparison, and avoid the potential for uname returning
+	something that test might interpret as an argument.
+
+2011-09-07  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: lposix.c: Include config.h.
+
+2011-09-07  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Rename luaopen function to match new library name.
+
+2011-09-07  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac: Add missing quotes.
+
+2011-09-07  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am, configure.ac: Replace previous machinery for
+	detecting extra cc and ld flags.
+
+2011-09-07  Reuben Thomas <rrt@sc3d.org>
+
+	* .gitignore, AUTHORS, Makefile, Makefile.am, NEWS, bootstrap,
+	bootstrap.conf, configure.ac, lib/.gitignore, lposix.c,
+	m4/.gitignore, m4/ax_lua.m4, posix.lua, test.lua, tests.lua: 
+	autotoolize the build system.
+
+2011-09-07  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Add read and write.
+
+2011-09-07  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Add open and close.  Generalise get_rlimit_const to lookup_symbol, and use it for open
+	flags.  Add a FIXME.
+
+2011-09-06  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Tidy up whitespace and comments a bit for consistency.
+
+2011-06-20  Reuben Thomas <rrt@sc3d.org>
+
+	* : Merge pull request #3 from jdegges/master Add nanosleep.
+
+2011-06-04  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Remove unneeded shim for luaL_register; Lua 5.2 still
+	has compatibility code for this.
+
+2011-05-11  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c, test.lua: Remove pushfile, which uses undocumented
+	tricks which don’t work on LuaJIT, and hence dup, fdopen and pipe.
+
+2011-05-11  Reuben Thomas <rrt@sc3d.org>
+
+	* test.lua: Reformat test.lua a bit more consistently.
+
+2011-05-11  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Separate out Lua 5.2 compatibility.
+
+2011-05-10  David Favro <lua@meta-dynamic.com>
+
+	* lposix.c: Ported to 5.2.0-alpha.   * Lightly tested.   * Conditional compilation, so remains backwards-compatible with
+	 5.1.  Signed-off-by: David Favro <lua@meta-dynamic.com>
+
+2011-05-10  David Favro <lua@meta-dynamic.com>
+
+	* Makefile: Makefile fix/enhancement.   * Fixed incorrect version string in library.   * Compiles with -O2 rather than no optimization.   * Added 'debug' target.  This may not work for non-GNU makes.  Signed-off-by: David Favro <lua@meta-dynamic.com>
+
+2011-05-10  David Favro <lua@meta-dynamic.com>
+
+	* lposix.c: Fixed bugs in dup().   * Fixed bug: segfault (null pointer dereference) in dup(x,nil).   * Fixed bug: non-conforming mode "rw" changed to "w+".  POSIX
+	   specifies "w+" or "r+" for read/write open.  "rw" is incorrect and
+	   fails to open for writing on GNU libc's fdopen().  Signed-off-by: David Favro <lua@meta-dynamic.com>
+
+2011-05-10  David Favro <lua@meta-dynamic.com>
+
+	* test.lua: Updated test.lua and added new tests.   * Removed deprecated constructs foreach(), getn().   * Added --no-times command-line option since that test is a bear to
+	 wait for.  * Added new tests: dup(), fdopen().  Signed-off-by: David Favro <lua@meta-dynamic.com>
+
+2011-04-27  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile: Bump version to 5.1.11.
+
+2011-04-27  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Fix a typo which caused a buffer overrun.
+
+2011-04-27  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile: Bump version to 5.1.10.
+
+2011-04-27  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Fix typo in Pmkstemp.
+
+2011-04-27  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Fix possibly dangerous typos in mode_munch.
+
+2011-04-27  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Update maintainer and bump copyright year.
+
+2011-04-27  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Fix typo in error mesage.
+
+2011-04-27  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Add mkstemp.
+
+2011-04-03  Gary V. Vaughan <gary@gnu.org>
+
+	* lposix.c: lposix.c: Widen the _XOPEN_REALTIME guards around
+	CLOCK_MONOTONIC et.al.  Several constants that are only defined with _XOPEN_REALTIME were
+	referenced even when _XOPEN_REALTIME is -1.
+
+2011-04-03  Gary V. Vaughan <gary@gnu.org>
+
+	* Makefile: Makefile: Darwin needs -D_POSIX_C_SOURCE in order to
+	define SIGPOLL
+
+2011-03-30  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Make sure _XOPEN_REALTIME is defined before testing its
+	value.
+
+2011-03-30  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Remove non-POSIX rlimit resources, and as missing
+	RLIMIT_AS.
+
+2011-03-29  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Test _XOPEN_REALTIME correctly (!= -1, not merely
+	defined).
+
+2011-03-24  Reuben Thomas <rrt@sc3d.org>
+
+	* ChangeLog.old, README: Update maintainer and git repo location.
+
+2011-03-24  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile: Bump version to 5.1.9.
+
+2011-03-22  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile: Fix some Darwin problems.
+
+2011-03-22  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Guard realtime functions with _XOPEN_REALTIME, and
+	remove a bogus debug line.
+
+2011-03-06  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Add getgroups.
+
+2011-03-05  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Add set_errno.
+
+2011-02-26  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Add _exit.
+
+2011-02-26  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Add signals support.
+
+2010-11-21  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Use lua_setfield where possible.
+
+2011-03-22  Natanael Copa <ncopa@alpinelinux.org>
+
+	* Makefile: release 5.1.8
+
+2010-11-12  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Add getopt_long.
+
+2010-11-05  Reuben Thomas <rrt@sc3d.org>
+
+	* README: Update maintainer and documentation information.
+
+2010-10-26  Natanael Copa <ncopa@alpinelinux.org>
+
+	* lposix.c: isgraph/isprint: use function pointer to save a few
+	bytes
+
+2010-10-26  Natanael Copa <ncopa@alpinelinux.org>
+
+	* test.lua: test: use execp instead of exec when testing fork
+	(cherry picked from commit 42ec4caff2d4895577298f6f26156b80beacdaa6) Conflicts: 	test.lua
+
+2010-10-23  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Add isprint and isgraph.
+
+2010-10-23  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Add errno and stdio.h constants.
+
+2010-10-22  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Add abort and raise.
+
+2010-10-22  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Add some comments.
+
+2010-10-22  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Remove excess white space to aid readability, and fix
+	some indenting.
+
+2010-10-22  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Remove Lua 5.0 compatibility.
+
+2010-10-22  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Add copyright notices for new contributors and tidy up
+	old ones.
+
+2010-10-22  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile, lposix.c, modemuncher.c: Fold modemuncher.c into
+	lposix.c, removing modesel array (same as lposix.c's M array).
+
+2010-10-22  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c, modemuncher.c: Use pushmode in Pumask, and hence remove
+	modechopper from modemuncher.c.
+
+2010-10-19  Reuben Thomas <rrt@sc3d.org>
+
+	* ChangeLog.old: Put old ChangeLog in correct date order; remove
+	non-ChangeLog format EOF marker.
+
+2010-10-19  Reuben Thomas <rrt@sc3d.org>
+
+	* modemuncher.c: Tidy up modemuncher.c.  Remove never-compiled debug code. This code is fairly well tested
+	now.  Fix whitespace and indentation.  Remove camelCase name of modeLookup struct and typedef, which is
+	only used once, and use an anonymous struct instead.  Rename the only remaining camelCase identifier in the entire file to
+	a non-camelCase one.
+
+2010-10-19  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile: Remove unnecessary phony targets.
+
+2010-10-19  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile: Fix building with glibc (support for crypt).
+
+2010-10-19  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c, test.lua: Remove non-POSIX gecos field of struct passwd.
+
+2010-10-19  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Improve a comment.
+
+2010-10-19  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Fix inconsistent indentation.
+
+2010-10-19  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Remove support for obsolete timezone argument of
+	gettimeofday.
+
+2010-10-19  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Remove declaration of crypt; it's a build system
+	problem.
+
+2010-10-19  Reuben Thomas <rrt@sc3d.org>
+
+	* .gitignore: Add .gitignore file.
+
+2010-10-19  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Compile syslog functions on any system with new-enough
+	POSIX.
+
+2010-10-19  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Clean up whitespace.
+
+2010-10-19  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile: Remove bogus whitespace.
+
+2010-10-26  Natanael Copa <ncopa@alpinelinux.org>
+
+	* test.lua: Revert "test: use execp instead of exec when testing
+	fork" This reverts commit 42ec4caff2d4895577298f6f26156b80beacdaa6.  reverting so i can apply patchset
+
+2010-10-23  Natanael Copa <ncopa@alpinelinux.org>
+
+	* test.lua: test: use execp instead of exec when testing fork
+
+2010-09-15  Natanael Copa <natanael.copa@gmail.com>
+
+	* lposix.c: use integers for gettimeofday so it works for platforms that uses float for lua numbers.
+
+2009-08-12  Natanael Copa <natanael.copa@gmail.com>
+
+	* ChangeLog.old: Add note to ChangeLog that we moved to git
+
+2009-08-12  Natanael Copa <natanael.copa@gmail.com>
+
+	* ChangeLog, ChangeLog.old, README: rename ChangeLog to
+	ChangeLog.old We will only use git to provide the history from now on.
+
+2009-08-12  Natanael Copa <natanael.copa@gmail.com>
+
+	* lposix.c: fix bug in setrlimit
+
+2010-08-12  Natanael Copa <ncopa@alpinelinux.org>
+
+	* Makefile: release 5.1.7
+
+2010-08-11  Tim Niemueller <niemueller@kbsg.rwth-aachen.de>
+
+	* lposix.c: Make clock_* arguments optional With the last change the clock id argument was no longer optional as
+	intended.
+
+2010-08-11  Natanael Copa <ncopa@alpinelinux.org>
+
+	* Makefile: set LIBVERSION=6 should have been done before the 5.1.5 release :-(
+
+2010-08-10  Tim Niemueller <niemueller@kbsg.rwth-aachen.de>
+
+	* lposix.c: Make clock_get* functions take string argument For consistency with existing functions.
+
+2010-08-10  Natanael Copa <ncopa@alpinelinux.org>
+
+	* lposix.c: added function definitions for 'make show-funcs'
+
+2010-08-09  Tim Niemueller <niemueller@kbsg.rwth-aachen.de>
+
+	* lposix.c: Use realtime clock by default in clock_get*
+
+2010-08-09  Tim Niemueller <niemueller@kbsg.rwth-aachen.de>
+
+	* lposix.c: Added strftime
+
+2010-08-09  Tim Niemueller <niemueller@kbsg.rwth-aachen.de>
+
+	* lposix.c: Add localtime, gmtime and time
+
+2010-08-09  Tim Niemueller <niemueller@kbsg.rwth-aachen.de>
+
+	* lposix.c: Compilation fixes + Fix compilation warnings (uninitialized values, signed vs.
+	unsigned) + if VERSION macro is not passed on command line, set to
+	  "unknown", allows to integrate source file into other buildsystems
+	more easily
+
+2010-08-09  Tim Niemueller <niemueller@kbsg.rwth-aachen.de>
+
+	* Makefile, lposix.c: Add gettimeofday, clock_getres, clock_gettime
+
+2010-03-29  Natanael Copa <ncopa@alpinelinux.org>
+
+	* Makefile: release 5.1.5
+
+2010-03-29  Natanael Copa <ncopa@alpinelinux.org>
+
+	* Makefile, lposix.c: use git describe to generate version string and use cgit do distribute tarball so we dont need the tar stuff in
+	makefile
+
+2009-08-11  Natanael Copa <natanael.copa@gmail.com>
+
+	* lposix.c: luafication of getrlimit/setrlimit Use strings as parameters to select resource rather than integer
+	constants.
+
+2009-08-11  Enrico Tassi <gares@fettunta.org>
+
+	* lposix.c: set/getrlimit, set/getuid and setlogmask bindings Hi,   while packagin the jabber server "prosody" for Debian, I noticed
+	  that it was using a custom binding of some posix function not
+	available in luaposix. After asking prosody author, I wrote a patch
+	for luaposix that adds the missing functionalities prosody is
+	actually shipping in a custom .so.  The attached patch binds the following functions: set/getrlimit,
+	set/getuid and setlogmask.  I'd like it to be integrated in a future release of luaposix, if
+	posible.  Cheers -- Enrico Tassi
+
+2008-07-18  Natanael Copa <natanael.copa@gmail.com>
+
+	* Makefile: Set LIBVERSION=4 for release 5.1.4.
+
+2008-07-18  Natanael Copa <natanael.copa@gmail.com>
+
+	* ChangeLog, Makefile, lposix.c: support for crypt() from openwrt.
+	https://dev.openwrt.org/cgi-bin/trac.fcgi/browser/packages/lang/luaposix/patches/200-crypt.patch?rev=11585
+
+2008-07-18  Natanael Copa <natanael.copa@gmail.com>
+
+	* lposix.c: ignore POLLHUP and POLLNVAL since they are only for
+	output http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=491257
+
+2008-06-03  Natanael Copa <natanael.copa@gmail.com>
+
+	* ChangeLog, README: updated readme and changelog
+
+2008-06-03  Natanael Copa <natanael.copa@gmail.com>
+
+	* lposix.c: use luaL_register
+
+2008-06-03  Natanael Copa <natanael.copa@gmail.com>
+
+	* Makefile: From: 	Felix Fietkau <nbd@openwrt.org> here's a small patch that fixes luaposix compile on Darwin / Mac OS
+	X
+
+2008-01-29  Natanael Copa <natanael.copa@gmail.com>
+
+	* lposix.c: added fdopen()
+
+2008-01-29  Natanael Copa <natanael.copa@gmail.com>
+
+	* ChangeLog: updated changelog
+
+2008-01-29  Natanael Copa <natanael.copa@gmail.com>
+
+	* Makefile: version 5.1.2
+
+2008-01-29  Natanael Copa <natanael.copa@gmail.com>
+
+	* lposix.c: added syslog funcs dup() takes and returns lua files.
+	added fileno() exec renamed to execp and new exec func uses execv(3)
+	rather than execvp(3)
+
+2008-01-28  Natanael Copa <natanael.copa@gmail.com>
+
+	* Makefile: dont run test by default
+
+2008-01-28  Natanael Copa <natanael.copa@gmail.com>
+
+	* lposix.c, posix.lua: sorted #includes, removed dead code,
+	whitspacefixes
+
+2008-01-25  Natanael Copa <natanael.copa@gmail.com>
+
+	* Makefile: cleaned up Makefile
+
+2008-01-25  Natanael Copa <natanael.copa@gmail.com>
+
+	* modemuncher.c: avoid warning on 64 bit hosts
+
+2008-01-24  Natanael Copa <natanael.copa@gmail.com>
+
+	* lposix.c: added poll() from
+	http://lua-users.org/lists/lua-l/2007-11/msg00346.html
+
+2008-01-24  Natanael Copa <natanael.copa@gmail.com>
+
+	* Makefile, README, lposix.c, test.lua, tree.lua: included stuff
+	from http://lua-users.org/lists/lua-l/2006-10/msg00448.html
+
+2008-01-24  Natanael Copa <natanael.copa@gmail.com>
+
+	* Initial revision
+

@@ -1,6 +1,6 @@
 -- test posix library
 
-require 'posix'
+local ox = require 'posix'
 
 function testing(s)
  print""
@@ -13,13 +13,12 @@ function myassert(w,c,s)
 end
 
 function myprint(s,...)
- for i=1,table.getn(arg) do
+ for i=1,#arg do
   io.write(arg[i],s)
  end
  io.write"\n"
 end
 
-ox=posix
 
 ------------------------------------------------------------------------------
 print(ox.version)
@@ -50,7 +49,7 @@ testing"setenv"
 function f(n,v) print("setenv",n,'=',v) ox.setenv(n,v) end
 function g(n) print("now",n,'=',ox.getenv(n)) end
 f("MYVAR","123");	g"MYVAR"
-f("MYVAR",nil);	    g"MYVAR"
+f("MYVAR",nil);     g"MYVAR"
 --f"MYVAR"	g"MYVAR"
 
 ------------------------------------------------------------------------------
@@ -75,20 +74,21 @@ f(d)
 myassert("rmdir",ox.rmdir"x")
 
 ------------------------------------------------------------------------------
-testing"fork, exec"
+testing"fork, execp"
 io.flush()
 pid=assert(ox.fork())
 if pid==0 then
-	pid=ox.getpid"pid"
-	ppid=ox.getpid"ppid"
-	io.write("in child process ",pid," from ",ppid,".\nnow executing date... ")
-	io.flush()
-	assert(ox.exec("date","+[%c]"))
-	print"should not get here"
+  pid=ox.getpid"pid"
+  ppid=ox.getpid"ppid"
+  io.write("in child process ",pid," from ",ppid,".\nnow executing date... ")
+  io.flush()
+  assert(ox.execp("date","+[%c]"))
+  print"should not get here"
 else
-	io.write("process ",ox.getpid"pid"," forked child process ",pid,". waiting...\n")
-	ox.wait(pid)
-	io.write("child process ",pid," done\n")
+  io.write("process ",ox.getpid"pid"," forked child process ",pid,". waiting...\n")
+  p,msg,ret = ox.wait(pid)
+  assert(p == pid and msg == "exited" and ret == 0)
+  io.write("child process ",pid," done\n")
 end
 
 ------------------------------------------------------------------------------
@@ -106,7 +106,7 @@ end
 testing"glob"
 function g() local d=ox.getcwd() print("now at",d) return d end
 g()
-for _,f in pairs(ox.glob "*.lua") do
+for _,f in pairs(ox.glob "*.o") do
   local T=assert(ox.stat(f))
   local p=assert(ox.getpasswd(T.uid))
   local g=assert(ox.getgroup(T.gid))
@@ -172,7 +172,7 @@ function f(x)
  if a==nil then
    print(x,"no such user")
   else
-   myprint(":",a.name,a.passwd,a.uid,a.gid,a.gecos,a.dir,a.shell)
+   myprint(":",a.name,a.passwd,a.uid,a.gid,a.dir,a.shell)
  end
 end
 
@@ -183,7 +183,7 @@ f"root"
 f(0)
 f(1234567)
 f"xxx"
-function f(x) print(ox.getpasswd(x,"name"),ox.getpasswd(x,"gecos")) end
+function f(x) print(ox.getpasswd(x,"name"),ox.getpasswd(x,"shell")) end
 f()
 f(nil)
 --ox.putenv"USER=root"
@@ -192,22 +192,24 @@ f(ox.getenv"USER")
 
 ------------------------------------------------------------------------------
 testing"sysconf"
-a=ox.sysconf() table.foreach(a,print)
+local function prtab(a) for k,v in pairs(a) do print( k, v ); end end
+prtab( ox.sysconf() );
 testing"pathconf"
-a=ox.pathconf(".") table.foreach(a,print)
+prtab( ox.pathconf(".") );
 
 ------------------------------------------------------------------------------
-testing"times"
-a=ox.times()
-for k,v in pairs(a) do print(k,v) end
-print"sleeping 4 seconds..."
-ox.sleep(4)
-b=ox.times()
-for k,v in pairs(b) do print(k,v) end
-print""
-print("elapsed",b.elapsed-a.elapsed)
-print("clock",os.clock())
+if arg[1] ~= "--no-times" then
+  testing"times"
+  a=ox.times()
+  for k,v in pairs(a) do print(k,v) end
+  print"sleeping 1 second..."
+  ox.sleep(1)
+  b=ox.times()
+  for k,v in pairs(b) do print(k,v) end
+  print""
+  print("elapsed",b.elapsed-a.elapsed)
+  print("clock",os.clock())
+end
 
 ------------------------------------------------------------------------------
-print""
-print(ox.version)
+io.stderr:write("\n\n==== ", ox.version, " tests completed ====\n\n")
