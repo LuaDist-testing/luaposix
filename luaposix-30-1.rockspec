@@ -1,7 +1,7 @@
 -- This file was automatically generated for the LuaDist project.
 
 package = "luaposix"
-version = "29-1"
+version = "30-1"
 description = {
   homepage = "http://github.com/luaposix/luaposix/",
   license = "MIT/X11",
@@ -10,13 +10,13 @@ description = {
 }
 -- LuaDist source
 source = {
-  tag = "29-1",
+  tag = "30-1",
   url = "git://github.com/LuaDist-testing/luaposix.git"
 }
 -- Original source
 -- source = {
---   url = "http://github.com/luaposix/luaposix/archive/release-v29.zip",
---   dir = "luaposix-release-v29",
+--   url = "http://github.com/luaposix/luaposix/archive/release-v30.zip",
+--   dir = "luaposix-release-v30",
 -- }
 dependencies = {
   "lua >= 5.1",
