@@ -1,6 +1,6 @@
 /*
- * POSIX library for Lua 5.1/5.2.
- * (c) Gary V. Vaughan <gary@vaughan.pe>, 2013-2014
+ * POSIX library for Lua 5.1, 5.2 & 5.3.
+ * (c) Gary V. Vaughan <gary@vaughan.pe>, 2013-2015
  * (c) Reuben Thomas <rrt@sc3d.org> 2010-2013
  * (c) Natanael Copa <natanael.copa@gmail.com> 2008-2010
  * Clean up and bug fixes by Leo Razoumov <slonik.az@gmail.com> 2006-10-11
@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>		/* for _POSIX_VERSION */
 
 #if HAVE_CURSES
 # if HAVE_NCURSESW_CURSES_H
@@ -37,10 +38,32 @@
 #include <term.h>
 #endif
 
+/* Some systems set _POSIX_C_SOURCE over _POSIX_VERSION! */
+#if _POSIX_C_SOURCE >= 200112L || _POSIX_VERSION >= 200112L || _XOPEN_SOURCE >= 600
+# define LPOSIX_2001_COMPLIANT 1
+#endif
+
+#if _POSIX_C_SOURCE >= 200809L || _XOPEN_SOURCE >= 700
+# define LPOSIX_2008_COMPLIANT 1
+# ifndef LPOSIX_2001_COMPLIANT
+#   define LPOSIX_2001_COMPLIANT
+# endif
+#endif
+
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
-#include "lua52compat.h"
+
+#if LUA_VERSION_NUM < 503
+#  define lua_isinteger lua_isnumber
+#endif
+
+#if LUA_VERSION_NUM == 502 || LUA_VERSION_NUM == 503
+#  define lua_objlen lua_rawlen
+#  define lua_strlen lua_rawlen
+#  define luaL_openlib(L,n,l,nup) luaL_setfuncs((L),(l),(nup))
+#  define luaL_register(L,n,l) (luaL_newlib(L,l))
+#endif
 
 #ifndef STREQ
 #  define STREQ(a, b)     (strcmp (a, b) == 0)
@@ -121,7 +144,7 @@ static lua_Integer
 checkinteger(lua_State *L, int narg, const char *expected)
 {
 	lua_Integer d = lua_tointeger(L, narg);
-	if (d == 0 && !lua_isnumber(L, narg))
+	if (d == 0 && !lua_isinteger(L, narg))
 		argtypeerror(L, narg, expected);
 	return d;
 }
@@ -143,9 +166,9 @@ checklong(lua_State *L, int narg)
 static chtype
 checkch(lua_State *L, int narg)
 {
-	if (lua_type(L, narg) == LUA_TNUMBER)
-		return luaL_checknumber(L, narg);
-	if (lua_type(L, narg) == LUA_TSTRING)
+	if (lua_isnumber(L, narg))
+		return (chtype)checkint(L, narg);
+	if (lua_isstring(L, narg))
 		return *lua_tostring(L, narg);
 
 	return argtypeerror(L, narg, "int or char");
@@ -198,7 +221,7 @@ checknargs(lua_State *L, int maxargs)
 {
 	int nargs = lua_gettop(L);
 	lua_pushfstring(L, "no more than %d argument%s expected, got %d",
-		        maxargs, maxargs > 1 ? "s" : "", nargs);
+		        maxargs, maxargs == 1 ? "" : "s", nargs);
 	luaL_argcheck(L, nargs <= maxargs, maxargs + 1, lua_tostring (L, -1));
 	lua_pop(L, 1);
 }
@@ -261,6 +284,16 @@ checkintfield(lua_State *L, int index, const char *k)
 {
 	int r;
 	checkfieldtype(L, index, k, LUA_TNUMBER, "int");
+	r = lua_tointeger(L, -1);
+	lua_pop(L, 1);
+	return r;
+}
+
+static int
+checknumberfield(lua_State *L, int index, const char *k)
+{
+	int r;
+	checkfieldtype(L, index, k, LUA_TNUMBER, "number");
 	r = lua_tonumber(L, -1);
 	lua_pop(L, 1);
 	return r;
@@ -340,8 +373,12 @@ badoption(lua_State *L, int i, const char *what, int option)
  * ================== */
 
 
+#define pushintegerfield(k,v) LPOSIX_STMT_BEG {				\
+	lua_pushinteger(L, (lua_Integer) v); lua_setfield(L, -2, k);	\
+} LPOSIX_STMT_END
+
 #define pushnumberfield(k,v) LPOSIX_STMT_BEG {				\
-	lua_pushnumber(L, (lua_Integer) v); lua_setfield(L, -2, k);	\
+	lua_pushnumber(L, (lua_Number) v); lua_setfield(L, -2, k);	\
 } LPOSIX_STMT_END
 
 #define pushstringfield(k,v) LPOSIX_STMT_BEG {				\
@@ -364,6 +401,7 @@ badoption(lua_State *L, int i, const char *what, int option)
 	lua_setmetatable(L, -2);					\
 } LPOSIX_STMT_END
 
+#define setintegerfield(_p, _n) pushintegerfield(LPOSIX_STR(_n), _p->_n)
 #define setnumberfield(_p, _n) pushnumberfield(LPOSIX_STR(_n), _p->_n)
 #define setstringfield(_p, _n) pushstringfield(LPOSIX_STR(_n), _p->_n)
 

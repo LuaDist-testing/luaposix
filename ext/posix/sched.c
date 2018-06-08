@@ -1,6 +1,6 @@
 /*
- * POSIX library for Lua 5.1/5.2.
- * (c) Gary V. Vaughan <gary@vaughan.pe>, 2013-2014
+ * POSIX library for Lua 5.1, 5.2 & 5.3.
+ * (c) Gary V. Vaughan <gary@vaughan.pe>, 2013-2015
  * (c) Reuben Thomas <rrt@sc3d.org> 2010-2013
  * (c) Natanael Copa <natanael.copa@gmail.com> 2008-2010
  * Clean up and bug fixes by Leo Razoumov <slonik.az@gmail.com> 2006-10-11
@@ -46,7 +46,7 @@ static int
 Psched_getscheduler(lua_State *L)
 {
 	struct sched_param sched_param  = {0};
-	pid_t pid = luaL_optint(L, 1, 0);
+	pid_t pid = optint(L, 1, 0);
 	checknargs(L, 1);
 	return pushresult(L, sched_getscheduler(pid), NULL);
 }

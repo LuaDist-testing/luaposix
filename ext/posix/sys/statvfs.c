@@ -1,6 +1,6 @@
 /*
- * POSIX library for Lua 5.1/5.2.
- * (c) Gary V. Vaughan <gary@vaughan.pe>, 2013-2014
+ * POSIX library for Lua 5.1, 5.2 & 5.3.
+ * (c) Gary V. Vaughan <gary@vaughan.pe>, 2013-2015
  * (c) Reuben Thomas <rrt@sc3d.org> 2010-2013
  * (c) Natanael Copa <natanael.copa@gmail.com> 2008-2010
  * Clean up and bug fixes by Leo Razoumov <slonik.az@gmail.com> 2006-10-11
@@ -51,17 +51,17 @@ pushstatvfs(lua_State *L, struct statvfs *sv)
 
 	lua_createtable(L, 0, 11);
 
-	setnumberfield(sv, f_bsize);
-	setnumberfield(sv, f_frsize);
-	setnumberfield(sv, f_blocks);
-	setnumberfield(sv, f_bfree);
-	setnumberfield(sv, f_bavail);
-	setnumberfield(sv, f_files);
-	setnumberfield(sv, f_ffree);
-	setnumberfield(sv, f_favail);
-	setnumberfield(sv, f_fsid);
-	setnumberfield(sv, f_flag);
-	setnumberfield(sv, f_namemax);
+	setintegerfield(sv, f_bsize);
+	setintegerfield(sv, f_frsize);
+	setintegerfield(sv, f_blocks);
+	setintegerfield(sv, f_bfree);
+	setintegerfield(sv, f_bavail);
+	setintegerfield(sv, f_files);
+	setintegerfield(sv, f_ffree);
+	setintegerfield(sv, f_favail);
+	setintegerfield(sv, f_fsid);
+	setintegerfield(sv, f_flag);
+	setintegerfield(sv, f_namemax);
 
 	settypemetatable("PosixStatvfs");
 	return 1;

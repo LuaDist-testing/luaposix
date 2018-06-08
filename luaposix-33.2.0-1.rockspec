@@ -1,7 +1,7 @@
 -- This file was automatically generated for the LuaDist project.
 
 package = "luaposix"
-version = "33.0.0-1"
+version = "33.2.0-1"
 description = {
   detailed = "A library binding various POSIX APIs, including curses. POSIX is the IEEE Portable Operating System Interface standard. luaposix is based on lposix and lcurses.",
   homepage = "http://github.com/luaposix/luaposix/",
@@ -10,17 +10,16 @@ description = {
 }
 -- LuaDist source
 source = {
-  tag = "33.0.0-1",
+  tag = "33.2.0-1",
   url = "git://github.com/LuaDist-testing/luaposix.git"
 }
 -- Original source
 -- source = {
---   dir = "luaposix-release-v33.0.0",
---   url = "http://github.com/luaposix/luaposix/archive/release-v33.0.0.zip",
+--   dir = "luaposix-release-v33.2.0",
+--   url = "http://github.com/luaposix/luaposix/archive/release-v33.2.0.zip",
 -- }
 dependencies = {
-  "lua >= 5.1",
-  "luabitop >= 1.0.2",
+  "lua >= 5.1, < 5.4",
 }
 external_dependencies = nil
 build = {

@@ -1,6 +1,6 @@
 /*
- * POSIX library for Lua 5.1/5.2.
- * (c) Gary V. Vaughan <gary@vaughan.pe>, 2013-2014
+ * POSIX library for Lua 5.1, 5.2 & 5.3.
+ * (c) Gary V. Vaughan <gary@vaughan.pe>, 2013-2015
  * (c) Reuben Thomas <rrt@sc3d.org> 2010-2013
  * (c) Natanael Copa <natanael.copa@gmail.com> 2008-2010
  * Clean up and bug fixes by Leo Razoumov <slonik.az@gmail.com> 2006-10-11
@@ -20,6 +20,11 @@
 #include <sys/resource.h>
 
 #include "_helpers.c"
+
+/* OpenBSD 5.6 recommends using RLIMIT_DATA in place of missing RLIMIT_AS */
+#ifndef RLIMIT_AS
+#  define RLIMIT_AS RLIMIT_DATA
+#endif
 
 
 /***
@@ -97,8 +102,8 @@ Psetrlimit(lua_State *L)
 	luaL_checktype(L, 2, LUA_TTABLE);
 	checknargs(L, 2);
 
-	lim.rlim_cur = checkintfield(L, 2, "rlim_cur");
-	lim.rlim_max = checkintfield(L, 2, "rlim_max");
+	lim.rlim_cur = checknumberfield(L, 2, "rlim_cur");
+	lim.rlim_max = checknumberfield(L, 2, "rlim_max");
 	checkfieldnames(L, 2, Srlimit_fields);
 
 	return pushresult(L, setrlimit(rid, &lim), "setrlimit");

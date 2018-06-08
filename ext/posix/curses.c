@@ -1,7 +1,7 @@
 /*
- * Curses binding for Lua 5.1/5.2.
+ * Curses binding for Lua 5.1, 5.2 & 5.3.
  *
- * (c) Gary V. Vaughan <gary@vaughan.pe> 2013-2014
+ * (c) Gary V. Vaughan <gary@vaughan.pe> 2013-2015
  * (c) Reuben Thomas <rrt@sc3d.org> 2009-2012
  * (c) Tiago Dionizio <tiago.dionizio AT gmail.com> 2004-2007
  *
@@ -82,13 +82,14 @@
 
 #include <config.h>
 
+#include "curses/chstr.c"
+#include "curses/window.c"
+
+
 #if HAVE_CURSES
 
 #include "_helpers.c"
 #include "strlcpy.c"
-
-#include "curses/chstr.c"
-#include "curses/window.c"
 
 
 static const char *STDSCR_REGISTRY	= "curses:stdscr";
@@ -1048,7 +1049,7 @@ Return a printable representation of a character, ignoring attributes.
 static int
 Punctrl(lua_State *L)
 {
-	chtype c = luaL_checknumber(L, 1);
+	chtype c = checkch(L, 1);
 	return pushstringresult(unctrl(c));
 }
 
@@ -1204,10 +1205,12 @@ Ptigetstr (lua_State *L)
 		lua_pushstring(L, res);
 	return 1;
 }
+#endif
 
 
 static const luaL_Reg curseslib[] =
 {
+#if HAVE_CURSES
 	LPOSIX_FUNC( Pbaudrate		),
 	LPOSIX_FUNC( Pbeep		),
 	LPOSIX_FUNC( Pcbreak		),
@@ -1263,9 +1266,9 @@ static const luaL_Reg curseslib[] =
 	LPOSIX_FUNC( Punctrl		),
 	LPOSIX_FUNC( Pungetch		),
 	LPOSIX_FUNC( Puse_default_colors),
+#endif
 	{NULL, NULL}
 };
-#endif
 
 /***
 Constants.
