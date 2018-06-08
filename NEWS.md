@@ -1,6 +1,22 @@
 # luaposix NEWS - User visible changes
 
 
+## Noteworthy changes in release 34.0.4 (2018-02-20) [stable]
+
+### Bugs Fixed
+
+  - `posix.time.clock_getres`, `posix.time.clock_gettime`
+    `posix.time.CLOCK_MONOTONIC`, `posix.time.CLOCK_REALTIME`,
+    `posix.time.CLOCK_PROCESS_CPUTIME_ID` and
+    `posix.time.CLOCK_THREAD_CPUTIME_ID` are all properly elided
+    on macOS again.
+
+  - `spec/spec_helper.lua` now looks in the correct objdir
+    for object modules built by luke, instead of hard-coding
+    `./linux/?.so`, so specl examples work on macOS and others
+    again.
+
+
 ## Noteworthy changes in release 34.0.3 (2018-02-19) [stable]
 
 ### Bugs Fixed
