@@ -408,23 +408,29 @@ static int Pset_errno(lua_State *L)
 
 static int Pbasename(lua_State *L)		/** basename(path) */
 {
-	char b[PATH_MAX];
+	char *b;
 	size_t len;
+	void *ud;
+	lua_Alloc lalloc = lua_getallocf(L, &ud);
 	const char *path = luaL_checklstring(L, 1, &len);
-	if (len>=sizeof(b))
-		luaL_argerror(L, 1, "too long");
+	if ((b = lalloc(ud, NULL, 0, strlen(path) + 1)) == NULL)
+		return pusherror(L, "lalloc");
 	lua_pushstring(L, basename(strcpy(b,path)));
+	lalloc(ud, b, 0, 0);
 	return 1;
 }
 
 static int Pdirname(lua_State *L)		/** dirname(path) */
 {
-	char b[PATH_MAX];
+	char *b;
 	size_t len;
+	void *ud;
+	lua_Alloc lalloc = lua_getallocf(L, &ud);
 	const char *path = luaL_checklstring(L, 1, &len);
-	if (len>=sizeof(b))
-		luaL_argerror(L, 1, "too long");
+	if ((b = lalloc(ud, NULL, 0, strlen(path) + 1)) == NULL)
+		return pusherror(L, "lalloc");
 	lua_pushstring(L, dirname(strcpy(b,path)));
+	lalloc(ud, b, 0, 0);
 	return 1;
 }
 
@@ -537,11 +543,17 @@ static int Pfiles(lua_State *L)			/** files([path]) */
 
 static int Pgetcwd(lua_State *L)		/** getcwd() */
 {
-	char b[PATH_MAX];
-	if (getcwd(b, sizeof(b)) == NULL)
-		return pusherror(L, ".");
-	lua_pushstring(L, b);
-	return 1;
+	long size = pathconf(".", _PC_PATH_MAX);
+	void *ud;
+	lua_Alloc lalloc = lua_getallocf(L, &ud);
+	char *b, *ret;
+	if ((b = lalloc(ud, NULL, 0, (size_t)size + 1)) == NULL)
+		return pusherror(L, "lalloc");
+	ret = getcwd(b, (size_t)size);
+	if (ret != NULL)
+		lua_pushstring(L, b);
+	lalloc(ud, b, 0, 0);
+	return (ret == NULL) ? pusherror(L, ".") : 1;
 }
 
 static int Pmkdir(lua_State *L)			/** mkdir(path) */
@@ -579,13 +591,20 @@ static int Plink(lua_State *L)			/** link(old,new,[symbolic]) */
 
 static int Preadlink(lua_State *L)		/** readlink(path) */
 {
-	char b[PATH_MAX];
+	char *b;
+	struct stat s;
 	const char *path = luaL_checkstring(L, 1);
-	int n = readlink(path, b, sizeof(b));
-	if (n==-1)
+	void *ud;
+	lua_Alloc lalloc = lua_getallocf(L, &ud);
+	if (stat(path, &s))
 		return pusherror(L, path);
-	lua_pushlstring(L, b, n);
-	return 1;
+	if ((b = lalloc(ud, NULL, 0, s.st_size + 1)) == NULL)
+		return pusherror(L, "lalloc");
+	ssize_t n = readlink(path, b, s.st_size);
+	if (n != -1)
+		lua_pushlstring(L, b, n);
+	lalloc(ud, b, 0, 0);
+	return (n == -1) ? pusherror(L, path) : 1;
 }
 
 static int Paccess(lua_State *L)		/** access(path,[mode]) */
@@ -628,7 +647,7 @@ static int Pmkstemp(lua_State *L)                 /** mkstemp(path) */
 	int res;
 
 	if ((tmppath = lalloc(ud, NULL, 0, strlen(path) + 1)) == NULL)
-		return 0;
+		return pusherror(L, "lalloc");
 	strcpy(tmppath, path);
 	res = mkstemp(tmppath);
 
@@ -2343,7 +2362,6 @@ LUALIB_API int luaopen_posix_c (lua_State *L)
 	MENTRY( NETUNREACH	);
 	MENTRY( NFILE		);
 	MENTRY( NOBUFS		);
-	MENTRY( NODATA		);
 	MENTRY( NODEV		);
 	MENTRY( NOENT		);
 	MENTRY( NOEXEC		);
@@ -2352,8 +2370,6 @@ LUALIB_API int luaopen_posix_c (lua_State *L)
 	MENTRY( NOMSG		);
 	MENTRY( NOPROTOOPT	);
 	MENTRY( NOSPC		);
-	MENTRY( NOSR		);
-	MENTRY( NOSTR		);
 	MENTRY( NOSYS		);
 	MENTRY( NOTCONN		);
 	MENTRY( NOTDIR		);
@@ -2373,7 +2389,6 @@ LUALIB_API int luaopen_posix_c (lua_State *L)
 	MENTRY( ROFS		);
 	MENTRY( SPIPE		);
 	MENTRY( SRCH		);
-	MENTRY( TIME		);
 	MENTRY( TIMEDOUT	);
 	MENTRY( TXTBSY		);
 	MENTRY( WOULDBLOCK	);

@@ -1,3 +1,93 @@
+2012-04-10  Reuben Thomas <rrt@sc3d.org>
+
+	* strlcpy.c: Replace LGPLed strlcpy with BSD licensed strlcpy, from
+
+	http://opensource.apple.com/source/OpenSSH/OpenSSH-7.1/openssh/bsd-strlcpy.c
+
+2012-04-08  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Fix memory leaks introduced by fix to cope with
+	arbitrary-length paths.
+
+2012-04-05  Reuben Thomas <rrt@sc3d.org>
+
+	* tests-posix.lua: Add tests for dirname and basename.
+
+2012-04-05  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Work with arbitrary-length paths.
+
+2012-04-03  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Remove XSR errno.h codes (thanks Enrico Tassi).
+
+2012-03-26  Reuben Thomas <rrt@sc3d.org>
+
+	* bootstrap.conf: Don't use gnulib sigaction module, as its license
+	is incompatible; don't want COPYINGv3.
+
+2012-03-26  Reuben Thomas <rrt@sc3d.org>
+
+	* README: Back to using only a double fork of lunit.
+
+2012-03-25  Reuben Thomas <rrt@sc3d.org>
+
+	* README: README: Update URL to lunit: for now need my version.
+
+2012-03-25  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am: Makefile.am: tell lunit which Lua interpreter to use.
+
+2012-03-25  Reuben Thomas <rrt@sc3d.org>
+
+	* tests-fcntl.lua: tests-fcntl.lua: make them work with Lua 5.2.
+
+2012-03-25  Reuben Thomas <rrt@sc3d.org>
+
+	* README: Improve documentation for use with Lua 5.2.
+
+2012-03-25  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac: Bump version to 5.1.18.
+
+2012-03-25  Reuben Thomas <rrt@sc3d.org>
+
+	* posix.lua: posix.lua: make Lua 5.2-compatible.
+
+2012-03-25  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac: Make configure accept Lua 5.2.
+
+2012-03-25  Reuben Thomas <rrt@sc3d.org>
+
+	* COPYING, README: Add correct license, and refer to it in README.
+
+2012-02-29  Reuben Thomas <rrt@sc3d.org>
+
+	* configure.ac: Bump version to 5.1.17.
+
+2012-02-29  Reuben Thomas <rrt@sc3d.org>
+
+	* lposix.c: Return old C handler from signal, so it can be chained;
+	fix masking of signals during Lua handler.
+
+2012-02-21  Reuben Thomas <rrt@sc3d.org>
+
+	* curses.lua, lcurses.c, lua52compat.h: Make curses module work with
+	Lua 5.2 module system (patch by StarWing).
+
+2012-02-18  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am: Makefile.am: update woger call.
+
+2012-02-18  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am: Makefile.am: Update woger call.
+
+2012-02-18  Reuben Thomas <rrt@sc3d.org>
+
+	* Makefile.am: Makefile.am: add lua52compat.h to EXTRA_DIST.
+
 2012-02-12  Reuben Thomas <rrt@sc3d.org>
 
 	* : Merge pull request #28 from likema/HEAD~~ Use AC_SEARCH_LIBS instead of AC_CHECK_LIBS in configure.ac.
