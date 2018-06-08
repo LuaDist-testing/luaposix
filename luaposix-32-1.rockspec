@@ -1,22 +1,22 @@
 -- This file was automatically generated for the LuaDist project.
 
 package = "luaposix"
-version = "31-1"
+version = "32-1"
 description = {
+  detailed = "A library binding various POSIX APIs, including curses. POSIX is the IEEE Portable Operating System Interface standard. luaposix is based on lposix and lcurses.",
   homepage = "http://github.com/luaposix/luaposix/",
   license = "MIT/X11",
   summary = "Lua bindings for POSIX (including curses)",
-  detailed = "A library binding various POSIX APIs, including curses. POSIX is the IEEE Portable Operating System Interface standard. luaposix is based on lposix and lcurses.",
 }
 -- LuaDist source
 source = {
-  tag = "31-1",
+  tag = "32-1",
   url = "git://github.com/LuaDist-testing/luaposix.git"
 }
 -- Original source
 -- source = {
---   url = "http://github.com/luaposix/luaposix/archive/release-v31.zip",
---   dir = "luaposix-release-v31",
+--   dir = "luaposix-release-v32",
+--   url = "http://github.com/luaposix/luaposix/archive/release-v32.zip",
 -- }
 dependencies = {
   "lua >= 5.1",
@@ -24,8 +24,8 @@ dependencies = {
 }
 external_dependencies = nil
 build = {
-  build_command = "./configure LUA='$(LUA)' LUA_INCLUDE='-I$(LUA_INCDIR)' --prefix='$(PREFIX)' --libdir='$(LIBDIR)' --datadir='$(LUADIR)' && make clean all",
-  type = "command",
+  build_command = "./configure LUA='$(LUA)' LUA_INCLUDE='-I$(LUA_INCDIR)' --prefix='$(PREFIX)' --libdir='$(LIBDIR)' --datadir='$(LUADIR)' --datarootdir='$(PREFIX)' && make clean all",
   copy_directories = {},
   install_command = "make install luadir='$(LUADIR)'",
+  type = "command",
 }
