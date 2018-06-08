@@ -1,5 +1,14 @@
 # luaposix NEWS - User visible changes
 
+
+## Noteworthy changes in release 34.0.3 (2018-02-19) [stable]
+
+### Bugs Fixed
+
+  - `posix.deprecated.fadvise` is properly elided on macOS and other
+    hosts that have no `posix.fcntl.posix_fadvise` implementation.
+
+
 ## Noteworthy changes in release 34.0.2 (2018-02-17) [stable]
 
 ### Incompatible Changes
