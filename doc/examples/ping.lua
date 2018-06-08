@@ -1,31 +1,34 @@
-local p = require "posix"
+#! /usr/bin/env lua
 
-if p.SOCK_RAW and p.SO_BINDTODEVICE then
-	-- Open raw socket
+local M = require 'posix.sys.socket'
 
-	local fd, err = p.socket(p.AF_INET, p.SOCK_RAW, p.IPPROTO_ICMP)
-	assert(fd, err)
 
-	-- Optionally, bind to specific device
+if M.SOCK_RAW and M.SO_BINDTODEVICE then
+   -- Open raw socket
 
-	local ok, err = p.setsockopt(fd, p.SOL_SOCKET, p.SO_BINDTODEVICE, "wlan0")
-	assert(ok, err)
+   local fd, err = M.socket(M.AF_INET, M.SOCK_RAW, M.IPPROTO_ICMP)
+   assert(fd, err)
 
-	-- Create raw ICMP echo (ping) message
+   -- Optionally, bind to specific device
 
-	local data = string.char(0x08, 0x00, 0x89, 0x98, 0x6e, 0x63, 0x00, 0x04, 0x00)
+   local ok, err = M.setsockopt(fd, M.SOL_SOCKET, M.SO_BINDTODEVICE, 'wlan0')
+   assert(ok, err)
 
-	-- Send message
+   -- Create raw ICMP echo (ping) message
 
-	local ok, err = p.sendto(fd, data, { family = p.AF_INET, addr = "8.8.8.8", port = 0 })
-	assert(ok, err)
+   local data = string.char(0x08, 0x00, 0x89, 0x98, 0x6e, 0x63, 0x00, 0x04, 0x00)
 
-	-- Read reply
+   -- Send message
 
-	local data, sa = p.recvfrom(fd, 1024)
-	assert(data, sa)
+   local ok, err = M.sendto(fd, data, {family=M.AF_INET, addr='8.8.8.8', port=0})
+   assert(ok, err)
 
-	if data then
-		print("Received ICMP message from " .. sa.addr)
-	end
+   -- Read reply
+
+   local data, sa = M.recvfrom(fd, 1024)
+   assert(data, sa)
+
+   if data then
+      print('Received ICMP message from ' .. sa.addr)
+   end
 end
