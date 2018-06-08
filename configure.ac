@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script
 
-AC_INIT(luaposix, 5.1.12, rrt@sc3d.org)
+AC_INIT(luaposix, 5.1.14, rrt@sc3d.org)
 AC_CONFIG_AUX_DIR([build-aux])
 
 AM_INIT_AUTOMAKE([-Wall -Werror std-options])
@@ -58,7 +58,7 @@ if test "$gl_gcc_warnings" = yes; then
 fi
 
 LT_PREREQ([2.2.6])
-LT_INIT
+LT_INIT([disable-static])
 LT_OUTPUT
 
 eval `./libtool --config |grep '^objdir='`
@@ -111,21 +111,17 @@ AX_LUA_HEADERS_VERSION(501)
 AC_SUBST(LUA)
 AC_SUBST(LUA_INCLUDE)
 
-dnl Lua libraries
-dnl FIXME: Parametrize on version; cf. use of --libdir.
-lualibdir='${libdir}/lua/5.1'
-AC_SUBST(lualibdir)
-luadatadir='${datadir}/lua/5.1'
-AC_SUBST(luadatadir)
-
 dnl Perl
 AX_WITH_PROG([PERL], [perl])
 if test -z "$PERL"; then
   AC_MSG_FAILURE([cannot find perl])
 fi
 
+dnl md5sum
+AX_WITH_PROG([MD5SUM], [md5sum], [false])
+
 dnl Generate output files
 AC_CONFIG_MACRO_DIR(m4)
 AC_CONFIG_HEADER(config.h)
-AC_CONFIG_FILES(Makefile lib/Makefile)
+AC_CONFIG_FILES(Makefile lib/Makefile $PACKAGE.rockspec)
 AC_OUTPUT

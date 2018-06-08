@@ -36,7 +36,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(dist_luadata_DATA) \
+DIST_COMMON = README $(am__configure_deps) $(dist_data_DATA) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in $(top_srcdir)/configure AUTHORS COPYING \
 	ChangeLog INSTALL NEWS build-aux/config.guess \
@@ -88,8 +88,8 @@ am__nobase_list = $(am__nobase_strip_setup); \
 am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-am__installdirs = "$(DESTDIR)$(lualibdir)" "$(DESTDIR)$(luadatadir)"
-LTLIBRARIES = $(lualib_LTLIBRARIES)
+am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(datadir)"
+LTLIBRARIES = $(lib_LTLIBRARIES)
 curses_c_la_LIBADD =
 am_curses_c_la_OBJECTS = lcurses.lo
 curses_c_la_OBJECTS = $(am_curses_c_la_OBJECTS)
@@ -140,7 +140,7 @@ RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	install-pdf-recursive install-ps-recursive install-recursive \
 	installcheck-recursive installdirs-recursive pdf-recursive \
 	ps-recursive uninstall-recursive
-DATA = $(dist_luadata_DATA)
+DATA = $(dist_data_DATA)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
 AM_RECURSIVE_TARGETS = $(RECURSIVE_TARGETS:-recursive=) \
@@ -260,6 +260,7 @@ LTLIBOBJS = @LTLIBOBJS@
 LUA = @LUA@
 LUA_INCLUDE = @LUA_INCLUDE@
 MAKEINFO = @MAKEINFO@
+MD5SUM = @MD5SUM@
 MKDIR_P = @MKDIR_P@
 NEXT_AS_FIRST_DIRECTIVE_SIGNAL_H = @NEXT_AS_FIRST_DIRECTIVE_SIGNAL_H@
 NEXT_AS_FIRST_DIRECTIVE_STDINT_H = @NEXT_AS_FIRST_DIRECTIVE_STDINT_H@
@@ -343,8 +344,6 @@ libexecdir = @libexecdir@
 localedir = @localedir@
 localstatedir = @localstatedir@
 lt_ECHO = @lt_ECHO@
-luadatadir = @luadatadir@
-lualibdir = @lualibdir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 objdir = @objdir@
@@ -367,25 +366,28 @@ ACLOCAL_AMFLAGS = -I m4
 AM_CPPFLAGS = $(LUA_INCLUDE)
 AM_CFLAGS = $(WERROR_CFLAGS) $(WARN_CFLAGS)
 EXTRA_LTLIBRARIES = curses_c.la
-lualib_LTLIBRARIES = posix_c.la $(WANTEDLIBS)
-dist_luadata_DATA = posix.lua $(WANTEDLUA)
+lib_LTLIBRARIES = posix_c.la $(WANTEDLIBS)
+dist_data_DATA = posix.lua $(WANTEDLUA)
 posix_c_la_SOURCES = lposix.c
 posix_c_la_CFLAGS = $(POSIX_EXTRA_CFLAGS)
-posix_c_la_LDFLAGS = -module $(builddir)/lib/libgnu.la $(POSIX_EXTRA_LDFLAGS)
+posix_c_la_LDFLAGS = -module -avoid-version $(builddir)/lib/libgnu.la $(POSIX_EXTRA_LDFLAGS)
 curses_c_la_SOURCES = lcurses.c
-curses_c_la_LDFLAGS = -module $(CURSES_LIB) -rpath '$(lualibdir)'
+curses_c_la_LDFLAGS = -module -avoid-version $(CURSES_LIB) -rpath '$(libdir)'
 LUA_ENV = LUA_INIT= LUA_PATH="$(abs_srcdir)/?.lua;;" LUA_CPATH="$(abs_builddir)/$(objdir)/?$(shrext);;"
-HTML = lcurses.html lcurses_c.html
+HTML = curses.html lcurses_c.html
 LUATESTS = \
 	$(srcdir)/tests-posix.lua	\
 	$(srcdir)/tests-curses.lua
 
+ROCKSPEC = $(PACKAGE)-$(VERSION)-1.rockspec
 EXTRA_DIST = \
 	$(HTML)				\
 	$(LUATESTS)			\
 	make_lcurses_doc.pl		\
+	luaposix.rockspec.in		\
 	strlcpy.c
 
+DISTCLEANFILES = $(PACKAGE).rockspec
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -442,32 +444,32 @@ $(srcdir)/config.h.in:  $(am__configure_deps)
 
 distclean-hdr:
 	-rm -f config.h stamp-h1
-install-lualibLTLIBRARIES: $(lualib_LTLIBRARIES)
+install-libLTLIBRARIES: $(lib_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
-	test -z "$(lualibdir)" || $(MKDIR_P) "$(DESTDIR)$(lualibdir)"
-	@list='$(lualib_LTLIBRARIES)'; test -n "$(lualibdir)" || list=; \
+	test -z "$(libdir)" || $(MKDIR_P) "$(DESTDIR)$(libdir)"
+	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
 	list2=; for p in $$list; do \
 	  if test -f $$p; then \
 	    list2="$$list2 $$p"; \
 	  else :; fi; \
 	done; \
 	test -z "$$list2" || { \
-	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 '$(DESTDIR)$(lualibdir)'"; \
-	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 "$(DESTDIR)$(lualibdir)"; \
+	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 '$(DESTDIR)$(libdir)'"; \
+	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 "$(DESTDIR)$(libdir)"; \
 	}
 
-uninstall-lualibLTLIBRARIES:
+uninstall-libLTLIBRARIES:
 	@$(NORMAL_UNINSTALL)
-	@list='$(lualib_LTLIBRARIES)'; test -n "$(lualibdir)" || list=; \
+	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
 	for p in $$list; do \
 	  $(am__strip_dir) \
-	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f '$(DESTDIR)$(lualibdir)/$$f'"; \
-	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f "$(DESTDIR)$(lualibdir)/$$f"; \
+	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f '$(DESTDIR)$(libdir)/$$f'"; \
+	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f "$(DESTDIR)$(libdir)/$$f"; \
 	done
 
-clean-lualibLTLIBRARIES:
-	-test -z "$(lualib_LTLIBRARIES)" || rm -f $(lualib_LTLIBRARIES)
-	@list='$(lualib_LTLIBRARIES)'; for p in $$list; do \
+clean-libLTLIBRARIES:
+	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
+	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
 	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
 	  test "$$dir" != "$$p" || dir=.; \
 	  echo "rm -f \"$${dir}/so_locations\""; \
@@ -476,7 +478,7 @@ clean-lualibLTLIBRARIES:
 curses_c.la: $(curses_c_la_OBJECTS) $(curses_c_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(curses_c_la_LINK)  $(curses_c_la_OBJECTS) $(curses_c_la_LIBADD) $(LIBS)
 posix_c.la: $(posix_c_la_OBJECTS) $(posix_c_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(posix_c_la_LINK) -rpath $(lualibdir) $(posix_c_la_OBJECTS) $(posix_c_la_LIBADD) $(LIBS)
+	$(AM_V_CCLD)$(posix_c_la_LINK) -rpath $(libdir) $(posix_c_la_OBJECTS) $(posix_c_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -527,26 +529,26 @@ clean-libtool:
 
 distclean-libtool:
 	-rm -f libtool config.lt
-install-dist_luadataDATA: $(dist_luadata_DATA)
+install-dist_dataDATA: $(dist_data_DATA)
 	@$(NORMAL_INSTALL)
-	test -z "$(luadatadir)" || $(MKDIR_P) "$(DESTDIR)$(luadatadir)"
-	@list='$(dist_luadata_DATA)'; test -n "$(luadatadir)" || list=; \
+	test -z "$(datadir)" || $(MKDIR_P) "$(DESTDIR)$(datadir)"
+	@list='$(dist_data_DATA)'; test -n "$(datadir)" || list=; \
 	for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  echo "$$d$$p"; \
 	done | $(am__base_list) | \
 	while read files; do \
-	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(luadatadir)'"; \
-	  $(INSTALL_DATA) $$files "$(DESTDIR)$(luadatadir)" || exit $$?; \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(datadir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(datadir)" || exit $$?; \
 	done
 
-uninstall-dist_luadataDATA:
+uninstall-dist_dataDATA:
 	@$(NORMAL_UNINSTALL)
-	@list='$(dist_luadata_DATA)'; test -n "$(luadatadir)" || list=; \
+	@list='$(dist_data_DATA)'; test -n "$(datadir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	test -n "$$files" || exit 0; \
-	echo " ( cd '$(DESTDIR)$(luadatadir)' && rm -f" $$files ")"; \
-	cd "$(DESTDIR)$(luadatadir)" && rm -f $$files
+	echo " ( cd '$(DESTDIR)$(datadir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(datadir)" && rm -f $$files
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run `make' without going through this Makefile.
@@ -864,7 +866,7 @@ check: check-recursive
 all-am: Makefile $(LTLIBRARIES) $(DATA) config.h
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(lualibdir)" "$(DESTDIR)$(luadatadir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(datadir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-recursive
@@ -888,13 +890,14 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
+	-test -z "$(DISTCLEANFILES)" || rm -f $(DISTCLEANFILES)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-recursive
 
-clean-am: clean-generic clean-libtool clean-lualibLTLIBRARIES \
+clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-recursive
@@ -916,13 +919,13 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-dist_luadataDATA install-lualibLTLIBRARIES
+install-data-am: install-dist_dataDATA
 
 install-dvi: install-dvi-recursive
 
 install-dvi-am:
 
-install-exec-am:
+install-exec-am: install-libLTLIBRARIES
 
 install-html: install-html-recursive
 
@@ -964,34 +967,36 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-dist_luadataDATA uninstall-lualibLTLIBRARIES
+uninstall-am: uninstall-dist_dataDATA uninstall-libLTLIBRARIES
 
 .MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) all check-am \
 	ctags-recursive install-am install-strip tags-recursive
 
 .PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
 	all all-am am--refresh check check-am check-local clean \
-	clean-generic clean-libtool clean-lualibLTLIBRARIES ctags \
+	clean-generic clean-libLTLIBRARIES clean-libtool ctags \
 	ctags-recursive dist dist-all dist-bzip2 dist-gzip dist-lzma \
 	dist-shar dist-tarZ dist-xz dist-zip distcheck distclean \
 	distclean-compile distclean-generic distclean-hdr \
 	distclean-libtool distclean-tags distcleancheck distdir \
 	distuninstallcheck dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am \
-	install-dist_luadataDATA install-dvi install-dvi-am \
-	install-exec install-exec-am install-html install-html-am \
-	install-info install-info-am install-lualibLTLIBRARIES \
-	install-man install-pdf install-pdf-am install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs installdirs-am maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags tags-recursive uninstall uninstall-am \
-	uninstall-dist_luadataDATA uninstall-lualibLTLIBRARIES
+	install-dist_dataDATA install-dvi install-dvi-am install-exec \
+	install-exec-am install-html install-html-am install-info \
+	install-info-am install-libLTLIBRARIES install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs installdirs-am \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	pdf pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
+	uninstall-dist_dataDATA uninstall-libLTLIBRARIES
 
 
 ChangeLog:
 	git2cl > ChangeLog
+
+$(ROCKSPEC): $(PACKAGE).rockspec $(distdir).tar.gz
+	sed -e 's/@MD5@/'`$(MD5SUM) $(distdir).tar.gz | cut -d " " -f 1`'/g' < $(PACKAGE).rockspec > $@
 
 $(HTML): lcurses.c make_lcurses_doc.pl
 	$(PERL) make_lcurses_doc.pl
@@ -1005,13 +1010,13 @@ show-funcs:
 	@echo "posix library:"
 	@fgrep '/**' lposix.c | cut -f2 -d/ | tr -d '*' | sort
 
-release: distcheck
+release: distcheck $(ROCKSPEC)
 	git diff --exit-code && \
 	git push && \
-	woger lua-l package=$(PACKAGE) package_name=$(PACKAGE_NAME) version="release $(VERSION)" description="Lua bindings for POSIX (including curses)" notes=release-notes-$(VERSION)
-	git tag -a -m "Release tag" rel-`echo $(VERSION) | sed -e 's/\./-/g'` && \
+	woger lua-l package=$(PACKAGE) package_name=$(PACKAGE_NAME) version="release $(VERSION)" description="`LUA_INIT= LUA_PATH='$(abs_srcdir)/?.rockspec.in' $(LUA) -l$(PACKAGE) -e 'print (description.summary)'`" notes=release-notes-$(VERSION)
+	git tag -a -m "Release tag" v$(VERSION) && \
 	git push --tags
-	@cat release-notes-$(VERSION) && echo "\n\nDon't forget to release on LuaForge!"
+	@cat release-notes-$(VERSION) && echo && echo "Don't forget to release on LuaForge, and fix the download URL in and upload the rockspec!"
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
