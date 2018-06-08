@@ -8,24 +8,24 @@ LUALIB= 	$(PREFIX)/lib/lua/$(LUAVERSION)
 LUABIN= 	$(PREFIX)/bin
 
 # other executables
-TAR=		tar
 LUA=		lua
 INSTALL=	install
 
 # no need to change anything below here
 PACKAGE=	luaposix
-LIBVERSION=	2
-VERSION=	$(LUAVERSION).$(LIBVERSION)
+LIBVERSION=	7
+RELEASE=	$(LUAVERSION).$(LIBVERSION)
 
-SRCS=		lposix.c modemuncher.c test.lua tree.lua
-EXTRADIST=	Makefile README ChangeLog
-DISTFILES=	$(SRCS) $(EXTRADIST)
-DISTDIR=	$(PACKAGE)-$(VERSION)
-TARGZ=		$(PACKAGE)-$(VERSION).tar.gz
+GIT_REV		:= $(shell test -d .git && git describe --always)
+ifeq ($(GIT_REV),)
+FULL_VERSION	:= $(RELEASE)
+else
+FULL_VERSION	:= $(GIT_REV)
+endif
 
-CPPFLAGS=	-fPIC $(INCS) $(WARN)
 WARN=		-pedantic -Wall
 INCS=		-I$(LUAINC)
+CFLAGS+=	-fPIC $(INCS) $(WARN) -DVERSION=\"$(FULL_VERSION)\"
 
 MYNAME=		posix
 MYLIB= 		$(MYNAME)
@@ -33,6 +33,15 @@ MYLIB= 		$(MYNAME)
 OBJS=		l$(MYLIB).o
 
 T= 		$(MYLIB).so
+
+OS=$(shell uname)
+ifeq ($(OS),Darwin)
+  LDFLAGS_SHARED=-bundle -undefined dynamic_lookup
+  LIBS=
+else
+  LDFLAGS_SHARED=-shared
+  LIBS=-lcrypt -lrt
+endif
 
 # targets
 phony += all
@@ -43,7 +52,7 @@ test:	all
 	$(LUA) test.lua
 
 $T:	$(OBJS)
-	$(CC) $(LDFLAGS) -o $@ -shared $(OBJS)
+	$(CC) $(LDFLAGS) -o $@ $(LDFLAGS_SHARED) $(OBJS) $(LIBS)
 
 $(OBJS): modemuncher.c
 
@@ -63,25 +72,6 @@ phony += show-funcs
 show-funcs:
 	@echo "$(MYNAME) library:"
 	@fgrep '/**' l$(MYLIB).c | cut -f2 -d/ | tr -d '*' | sort
-
-# distribution
-
-phony += distdir
-distdir: $(DISTFILES)
-	if [ -d "$(DISTDIR)" ]; then	\
-		rm -r "$(DISTDIR)";	\
-	fi
-	mkdir "$(DISTDIR)"
-	cp -a $(DISTFILES) "$(DISTDIR)/"
-
-
-phony += tar
-tar:	distdir	
-	$(TAR) zcf $(TARGZ) $(DISTDIR)
-	rm -r $(DISTDIR)
-
-phony += dist
-dist:	tar
 
 .PHONY: $(phony)
 # eof
