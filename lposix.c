@@ -1,7 +1,7 @@
 /*
 * lposix.c
 * POSIX library for Lua 5.1.
-* (c) Reuben Thomas (maintainer) <rrt@sc3d.org> 2010-2011
+* (c) Reuben Thomas (maintainer) <rrt@sc3d.org> 2010-2012
 * (c) Natanael Copa <natanael.copa@gmail.com> 2008-2010
 * Clean up and bug fixes by Leo Razoumov <slonik.az@gmail.com> 2006-10-11
 * Luiz Henrique de Figueiredo <lhf@tecgraf.puc-rio.br> 07 Apr 2006 23:17:49
@@ -23,6 +23,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <fnmatch.h>
 #include <getopt.h>
 #include <glob.h>
 #include <grp.h>
@@ -56,26 +57,15 @@
 #define LPOSIX__SPLICE(_s, _t)	_s##_t
 #define LPOSIX_SPLICE(_s, _t)	LPOSIX__SPLICE(_s, _t)
 
-/* The +1 is to step over the leading '_' that is required to prevent
-   premature expansion of MENTRY arguments if we didn't add it.  */
-#define LPOSIX__STR(_s)		(#_s + 1)
+#define LPOSIX__STR(_s)		#_s
 #define LPOSIX_STR(_s)		LPOSIX__STR(_s)
 
+/* The +1 is to step over the leading '_' that is required to prevent
+   premature expansion of MENTRY arguments if we didn't add it.  */
+#define LPOSIX__STR_1(_s)	(#_s + 1)
+#define LPOSIX_STR_1(_s)	LPOSIX__STR_1(_s)
 
-/* Lua 5.2 compatibility */
-#if LUA_VERSION_NUM > 501
-#define lua_objlen lua_rawlen
-
-#include <assert.h>
-#define lua_setenv(L, n)  assert(lua_setuservalue(L, -2) == 1)
-static int luaL_typerror(lua_State *L, int narg, const char *tname)
-{
-	const char *msg = lua_pushfstring(L, "%s expected, got %s",
-					  tname, luaL_typename(L, narg));
-	return luaL_argerror(L, narg, msg);
-}
-#endif
-
+#include "lua52compat.h"
 
 /* ISO C functions missing from the standard Lua libraries. */
 
@@ -97,11 +87,11 @@ static int Praise(lua_State *L)
 
 static int bind_ctype(lua_State *L, int (*cb)(int))
 {
-		const char *s = luaL_checkstring(L, 1);
-		char c = *s;
-		lua_pop(L, 1);
-		lua_pushboolean(L, cb((int)c));
-		return 1;
+	const char *s = luaL_checkstring(L, 1);
+	char c = *s;
+	lua_pop(L, 1);
+	lua_pushboolean(L, cb((int)c));
+	return 1;
 }
 
 static int Pisgraph(lua_State *L)
@@ -169,6 +159,20 @@ static int rwxrwxrwx(mode_t *mode, const char *p)
 	return 0;
 }
 
+static int octal_mode(mode_t *mode, const char *p)
+{
+	mode_t tmp_mode = 0;
+	char* endp = NULL;
+	if (strlen(p) > 8)
+		return -4; /* error -- bad syntax, string too long */
+	tmp_mode = strtol(p, &endp, 8);
+	if (p && endp && *p != '\0' && *endp == '\0') {
+		*mode = tmp_mode;
+		return 0;
+	}
+	return -4; /* error -- bad syntax */
+}
+
 static int mode_munch(mode_t *mode, const char* p)
 {
 	char op=0;
@@ -184,8 +188,12 @@ static int mode_munch(mode_t *mode, const char* p)
 		/* step 1 -- who's affected? */
 
 		/* mode string given in rwxrwxrwx format */
-		if (*p== 'r' || *p == '-')
+		if (*p == 'r' || *p == '-')
 			return rwxrwxrwx(mode, p);
+
+		/* mode string given in octal */
+		if (*p >= '0' && *p <= '7')
+			return octal_mode(mode, p);
 
 		/* mode string given in ugoa+-=rwx format */
 		for ( ; ; p++)
@@ -269,7 +277,7 @@ static int mode_munch(mode_t *mode, const char* p)
 				*mode &= ~(ch_mode & affected_bits);
 				break;
 			case '=':
-				*mode = ch_mode & affected_bits;
+				*mode = (*mode & ~affected_bits) | (ch_mode & affected_bits);
 				break;
 			default:
 				return -3; /* failed! -- unknown error */
@@ -440,6 +448,24 @@ static int Pdir(lua_State *L)			/** dir([path]) */
 		lua_pushinteger(L, i-1);
 		return 2;
 	}
+}
+
+static int Pfnmatch(lua_State *L)     /** fnmatch(pattern, string [,flags]) */
+{
+	const char *pattern = lua_tostring(L, 1);
+	const char *string = lua_tostring(L, 2);
+	int flags = luaL_optint(L, 3, 0);
+	int res = fnmatch(pattern, string, flags);
+	if (res == 0)
+		lua_pushboolean(L, 1);
+	else if (res == FNM_NOMATCH)
+		lua_pushboolean(L, 0);
+	else
+	{
+		lua_pushstring(L, "fnmatch failed");
+		lua_error(L);
+	}
+	return 1;
 }
 
 static int Pglob(lua_State *L)                  /** glob(pattern) */
@@ -655,7 +681,7 @@ static int P_exit(lua_State *L) /* _exit() */
 }
 
 /* from http://lua-users.org/lists/lua-l/2007-11/msg00346.html */
-static int Ppoll(lua_State *L)   /** poll(filehandle, timeout) */
+static int Prpoll(lua_State *L)   /** poll(filehandle, timeout) */
 {
 	struct pollfd fds;
 	FILE* file = *(FILE**)luaL_checkudata(L,1,LUA_FILEHANDLE);
@@ -665,9 +691,215 @@ static int Ppoll(lua_State *L)   /** poll(filehandle, timeout) */
 	return pushresult(L, poll(&fds,1,timeout), NULL);
 }
 
+static struct {
+	short       bit;
+	const char *name;
+} Ppoll_event_map[] = {
+#define MAP(_NAME) \
+	{POLL##_NAME, #_NAME}
+	MAP(IN),
+	MAP(PRI),
+	MAP(OUT),
+	MAP(ERR),
+	MAP(HUP),
+	MAP(NVAL),
+#undef MAP
+};
+
+#define PPOLL_EVENT_NUM (sizeof(Ppoll_event_map) / sizeof(*Ppoll_event_map))
+
+static void Ppoll_events_createtable(lua_State *L)
+{
+	lua_createtable(L, 0, PPOLL_EVENT_NUM);
+}
+
+static short Ppoll_events_from_table(lua_State *L, int table)
+{
+	short   events  = 0;
+	size_t  i;
+
+	/* Convert to absolute index */
+	if (table < 0)
+		table = lua_gettop(L) + table + 1;
+
+	for (i = 0; i < PPOLL_EVENT_NUM; i++)
+	{
+		lua_getfield(L, table, Ppoll_event_map[i].name);
+		if (lua_toboolean(L, -1))
+			events |= Ppoll_event_map[i].bit;
+		lua_pop(L, 1);
+	}
+
+	return events;
+}
+
+static void Ppoll_events_to_table(lua_State *L, int table, short events)
+{
+	size_t  i;
+
+	/* Convert to absolute index */
+	if (table < 0)
+		table = lua_gettop(L) + table + 1;
+
+	for (i = 0; i < PPOLL_EVENT_NUM; i++)
+	{
+		lua_pushboolean(L, events & Ppoll_event_map[i].bit);
+		lua_setfield(L, table, Ppoll_event_map[i].name);
+	}
+}
+
+static nfds_t Ppoll_fd_list_check_table(lua_State  *L,
+					int         table)
+{
+	nfds_t          fd_num      = 0;
+
+	/*
+	 * Assume table is an argument number.
+	 * Should be an assert(table > 0).
+	 */
+
+	luaL_checktype(L, table, LUA_TTABLE);
+
+	/* Nil key - the one before first */
+	lua_pushnil(L);
+
+	/* Push each key/value pair, popping previous key */
+	while (lua_next(L, 1) != 0)
+	{
+		/* Verify the fd key */
+		luaL_argcheck(L, lua_isnumber(L, -2), table,
+					  "contains non-integer key(s)");
+
+		/* Verify the table value */
+		luaL_argcheck(L, lua_istable(L, -1), table,
+					  "contains non-table value(s)");
+		lua_getfield(L, -1, "events");
+		luaL_argcheck(L, lua_istable(L, -1), table,
+					  "contains invalid value table(s)");
+		lua_pop(L, 1);
+		lua_getfield(L, -1, "revents");
+		luaL_argcheck(L, lua_isnil(L, -1) || lua_istable(L, -1), table,
+					  "contains invalid value table(s)");
+		lua_pop(L, 1);
+
+		/* Remove value (but leave the key) */
+		lua_pop(L, 1);
+
+		/* Count the fds */
+		fd_num++;
+	}
+
+	return fd_num;
+}
+
+static void Ppoll_fd_list_from_table(lua_State         *L,
+				     int                table,
+				     struct pollfd     *fd_list)
+{
+	struct pollfd  *pollfd  = fd_list;
+
+	/*
+	 * Assume the table didn't change since
+	 * the call to Ppoll_fd_list_check_table
+	 */
+
+	/* Convert to absolute index */
+	if (table < 0)
+		table = lua_gettop(L) + table + 1;
+
+	/* Nil key - the one before first */
+	lua_pushnil(L);
+
+	/* Push each key/value pair, popping previous key */
+	while (lua_next(L, table) != 0)
+	{
+		/* Transfer the fd key */
+		pollfd->fd = lua_tointeger(L, -2);
+
+		/* Transfer "events" field from the value */
+		lua_getfield(L, -1, "events");
+		pollfd->events = Ppoll_events_from_table(L, -1);
+		lua_pop(L, 1);
+
+		/* Remove value (but leave the key) */
+		lua_pop(L, 1);
+
+		/* Proceed to next fd */
+		pollfd++;
+	}
+}
+
+static void Ppoll_fd_list_to_table(lua_State           *L,
+				   int                  table,
+				   const struct pollfd *fd_list)
+{
+	const struct pollfd    *pollfd  = fd_list;
+
+	/*
+	 * Assume the table didn't change since
+	 * the call to Ppoll_fd_list_check_table.
+	 */
+
+	/* Convert to absolute index */
+	if (table < 0)
+		table = lua_gettop(L) + table + 1;
+
+	/* Nil key - the one before first */
+	lua_pushnil(L);
+
+	/* Push each key/value pair, popping previous key */
+	while (lua_next(L, 1) != 0)
+	{
+		/* Transfer "revents" field to the value */
+		lua_getfield(L, -1, "revents");
+		if (lua_isnil(L, -1))
+		{
+			lua_pop(L, 1);
+			Ppoll_events_createtable(L);
+			lua_pushvalue(L, -1);
+			lua_setfield(L, -3, "revents");
+		}
+		Ppoll_events_to_table(L, -1, pollfd->revents);
+		lua_pop(L, 1);
+
+		/* Remove value (but leave the key) */
+		lua_pop(L, 1);
+
+		/* Proceed to next fd */
+		pollfd++;
+	}
+}
+
+static int Ppoll(lua_State *L)          /** poll(pollfds, [timeout]) */
+{
+	struct pollfd   static_fd_list[16];
+	struct pollfd  *fd_list;
+	nfds_t          fd_num;
+	int             timeout;
+	int             result;
+
+	fd_num = Ppoll_fd_list_check_table(L, 1);
+	timeout = luaL_optint(L, 2, -1);
+
+	fd_list = (fd_num <= sizeof(static_fd_list) / sizeof(*static_fd_list))
+					? static_fd_list
+					: lua_newuserdata(L, sizeof(*fd_list) * fd_num);
+
+
+	Ppoll_fd_list_from_table(L, 1, fd_list);
+
+	result = poll(fd_list, fd_num, timeout);
+
+	/* If any of the descriptors changed state */
+	if (result > 0)
+		Ppoll_fd_list_to_table(L, 1, fd_list);
+
+	return pushresult(L, result, NULL);
+}
+
 static int Pwait(lua_State *L)			/** wait([pid]) */
 {
-	int status;
+	int status = 0;
 	pid_t pid = luaL_optint(L, 1, -1);
 	int options = luaL_optint(L, 2, 0);
 
@@ -847,7 +1079,7 @@ static const int Koflag[] =
 
 static const char *const Soflag[] =
 {
-#define MENTRY(_f) LPOSIX_STR(_f),
+#define MENTRY(_f) LPOSIX_STR_1(_f),
 	OFLAGS_MAP
 #undef MENTRY
 	NULL
@@ -932,14 +1164,21 @@ static int Pread(lua_State *L)			/** buf = read(fd, count) */
 	int count = luaL_checkint(L, 2), ret;
 	void *ud, *buf;
 	lua_Alloc lalloc = lua_getallocf(L, &ud);
-	if ((buf = lalloc(ud, NULL, 0, count)) == NULL)
-		return 0;
+
+	/* Reset errno in case lalloc doesn't set it */
+	errno = 0;
+	if ((buf = lalloc(ud, NULL, 0, count)) == NULL && count > 0)
+		return pusherror(L, "lalloc");
+
 	ret = read(fd, buf, count);
 	if (ret < 0)
 		return pusherror(L, NULL);
+
 	lua_pushlstring(L, buf, ret);
+
 	lalloc(ud, buf, 0, 0);
-	return 2;
+
+	return 1;
 }
 
 static int Pwrite(lua_State *L)			/** write(fd, buf) */
@@ -1009,9 +1248,7 @@ static int Pgetpid(lua_State *L)		/** getpid([options]) */
 
 static int Phostid(lua_State *L)		/** hostid() */
 {
-	char b[32];
-	sprintf(b,"%ld",gethostid());
-	lua_pushstring(L, b);
+	lua_pushinteger(L, gethostid());
 	return 1;
 }
 
@@ -1123,30 +1360,29 @@ static int Pgetgroups(lua_State *L)		/** getgroups() */
 {
 	int n_group_slots = getgroups(0, NULL);
 
-	if (n_group_slots >= 0) {
-		int n_groups;
-		void *ud;
-		gid_t *group;
-		lua_Alloc lalloc = lua_getallocf(L, &ud);
+	if (n_group_slots < 0)
+		return pusherror(L, NULL);
+	else if (n_group_slots == 0)
+		lua_newtable(L);
+	else {
+		gid_t  *group;
+		int     n_groups;
+		int     i;
 
-		if ((group = lalloc(ud, NULL, 0, n_group_slots * sizeof *group)) == NULL)
-			return 0;
+		group = lua_newuserdata(L, sizeof(*group) * n_group_slots);
 
-		if ((n_groups = getgroups(n_group_slots, group)) >= 0) {
-			int i;
-			lua_createtable(L, n_groups, 0);
-			for (i = 0; i < n_groups; i++) {
-				lua_pushinteger(L, group[i]);
-				lua_rawseti(L, -2, i + 1);
-			}
-			free (group);
-			return 1;
+		n_groups = getgroups(n_group_slots, group);
+		if (n_groups < 0)
+			return pusherror(L, NULL);
+
+		lua_createtable(L, n_groups, 0);
+		for (i = 0; i < n_groups; i++) {
+			lua_pushinteger(L, group[i]);
+			lua_rawseti(L, -2, i + 1);
 		}
-
-		free(group);
 	}
 
-	return 0;
+	return 1;
 }
 #endif
 
@@ -1264,6 +1500,14 @@ static int Pstat(lua_State *L)			/** stat(path,[options]) */
 	return doselection(L, 2, Sstat, Fstat, &s);
 }
 
+static int Pfcntl(lua_State *L)
+{
+	int fd = luaL_optint(L, 1, 0);
+	int cmd = luaL_checkint(L, 2);
+	int arg = luaL_optint(L, 3, 0);
+	return pushresult(L, fcntl(fd, cmd, arg), "fcntl");
+}
+
 
 static int Puname(lua_State *L)			/** uname([string]) */
 {
@@ -1317,7 +1561,7 @@ static void Fpathconf(lua_State *L, int i, const void *data)
 
 static const char *const Spathconf[] =
 {
-#define MENTRY(_f) LPOSIX_STR(_f),
+#define MENTRY(_f) LPOSIX_STR_1(_f),
 	pathconf_map
 #undef MENTRY
 	NULL
@@ -1356,7 +1600,7 @@ static void Fsysconf(lua_State *L, int i, const void *data)
 
 static const char *const Ssysconf[] =
 {
-#define MENTRY(_f) LPOSIX_STR(_f),
+#define MENTRY(_f) LPOSIX_STR_1(_f),
 	sysconf_map
 #undef MENTRY
 	NULL
@@ -1380,9 +1624,6 @@ static int Popenlog(lua_State *L)	/** openlog(ident, [option], [facility]) */
 			case ' ': break;
 			case 'c': option |= LOG_CONS; break;
 			case 'n': option |= LOG_NDELAY; break;
-#ifdef LOG_PERROR
-			case 'e': option |= LOG_PERROR; break;
-#endif
 			case 'p': option |= LOG_PID; break;
 			default: badoption(L, 2, "option", *s); break;
 		}
@@ -1407,7 +1648,7 @@ static int Pcloselog(lua_State *L)		/** closelog() */
 	return 0;
 }
 
-static int Psetlogmask(lua_State* L) 		/** setlogmask(priority...) */
+static int Psetlogmask(lua_State* L)            /** setlogmask(priority...) */
 {
 	int argno = lua_gettop(L);
 	int mask = 0;
@@ -1472,13 +1713,13 @@ static const int Krlimit[] =
 
 static const char *const Srlimit[] =
 {
-#define MENTRY(_f) LPOSIX_STR(_f),
+#define MENTRY(_f) LPOSIX_STR_1(_f),
 	rlimit_map
 #undef MENTRY
 	NULL
 };
 
-static int Psetrlimit(lua_State *L) 	/** setrlimit(resource,soft[,hard]) */
+static int Psetrlimit(lua_State *L)     /** setrlimit(resource,soft[,hard]) */
 {
 	int softlimit;
 	int hardlimit;
@@ -1509,7 +1750,7 @@ static int Psetrlimit(lua_State *L) 	/** setrlimit(resource,soft[,hard]) */
 }
 
 /* FIXME: Use doselection. */
-static int Pgetrlimit(lua_State *L) 	/** getrlimit(resource) */
+static int Pgetrlimit(lua_State *L)     /** getrlimit(resource) */
 {
 	struct rlimit lim;
 	int rid, rc;
@@ -1518,10 +1759,13 @@ static int Pgetrlimit(lua_State *L) 	/** getrlimit(resource) */
 	rc = getrlimit(rid, &lim);
 	if (rc < 0)
 		return pusherror(L, "getrlimit");
-	lua_pushnumber(L, lim.rlim_cur);
-	lua_pushnumber(L, lim.rlim_max);
+	lua_pushinteger(L, lim.rlim_cur);
+	lua_pushinteger(L, lim.rlim_max);
 	return 2;
 }
+
+
+/* Time and date */
 
 static int Pgettimeofday(lua_State *L)		/** gettimeofday() */
 {
@@ -1538,8 +1782,67 @@ static int Ptime(lua_State *L)			/** time() */
 	time_t t = time(NULL);
 	if ((time_t)-1 == t)
 		return pusherror(L, "time");
-	lua_pushnumber(L, t);
+	lua_pushinteger(L, t);
 	return 1;
+}
+
+/* N.B. In Lua broken-down time tables the month field is 1-based not
+   0-based, and the year field is the full year, not years since
+   1900. */
+
+static void totm(lua_State *L, int n, struct tm *tp)
+{
+	luaL_checktype(L, n, LUA_TTABLE);
+	lua_getfield(L, n, "sec");
+	tp->tm_sec = luaL_optint(L, -1, 0);
+	lua_pop(L, 1);
+	lua_getfield(L, n, "min");
+	tp->tm_min = luaL_optint(L, -1, 0);
+	lua_pop(L, 1);
+	lua_getfield(L, n, "hour");
+	tp->tm_hour = luaL_optint(L, -1, 0);
+	lua_pop(L, 1);
+	lua_getfield(L, n, "monthday");
+	tp->tm_mday = luaL_optint(L, -1, 0);
+	lua_pop(L, 1);
+	lua_getfield(L, n, "month");
+	tp->tm_mon = luaL_optint(L, -1, 0) - 1;
+	lua_pop(L, 1);
+	lua_getfield(L, n, "year");
+	tp->tm_year = luaL_optint(L, -1, 0) - 1900;
+	lua_pop(L, 1);
+	lua_getfield(L, n, "weekday");
+	tp->tm_wday = luaL_optint(L, -1, 0);
+	lua_pop(L, 1);
+	lua_getfield(L, n, "yearday");
+	tp->tm_yday = luaL_optint(L, -1, 0);
+	lua_pop(L, 1);
+	lua_getfield(L, n, "is_dst");
+	tp->tm_isdst = (lua_type(L, -1) == LUA_TBOOLEAN) ? lua_toboolean(L, -1) : 0;
+	lua_pop(L, 1);
+}
+
+static void pushtm(lua_State *L, struct tm t)
+{
+	lua_createtable(L, 0, 9);
+	lua_pushinteger(L, t.tm_sec);
+	lua_setfield(L, -2, "sec");
+	lua_pushinteger(L, t.tm_min);
+	lua_setfield(L, -2, "min");
+	lua_pushinteger(L, t.tm_hour);
+	lua_setfield(L, -2, "hour");
+	lua_pushinteger(L, t.tm_mday);
+	lua_setfield(L, -2, "monthday");
+	lua_pushinteger(L, t.tm_mon + 1);
+	lua_setfield(L, -2, "month");
+	lua_pushinteger(L, t.tm_year + 1900);
+	lua_setfield(L, -2, "year");
+	lua_pushinteger(L, t.tm_wday);
+	lua_setfield(L, -2, "weekday");
+	lua_pushinteger(L, t.tm_yday);
+	lua_setfield(L, -2, "yearday");
+	lua_pushboolean(L, t.tm_isdst);
+	lua_setfield(L, -2, "is_dst");
 }
 
 static int Plocaltime(lua_State *L)		/** localtime([time]) */
@@ -1548,25 +1851,7 @@ static int Plocaltime(lua_State *L)		/** localtime([time]) */
 	time_t t = luaL_optint(L, 1, time(NULL));
 	if (localtime_r(&t, &res) == NULL)
 		return pusherror(L, "localtime");
-	lua_createtable(L, 0, 9);
-	lua_pushnumber(L, res.tm_sec);
-	lua_setfield(L, -2, "sec");
-	lua_pushnumber(L, res.tm_min);
-	lua_setfield(L, -2, "min");
-	lua_pushnumber(L, res.tm_hour);
-	lua_setfield(L, -2, "hour");
-	lua_pushnumber(L, res.tm_mday);
-	lua_setfield(L, -2, "monthday");
-	lua_pushnumber(L, res.tm_mon + 1);
-	lua_setfield(L, -2, "month");
-	lua_pushnumber(L, res.tm_year + 1900);
-	lua_setfield(L, -2, "year");
-	lua_pushnumber(L, res.tm_wday);
-	lua_setfield(L, -2, "weekday");
-	lua_pushnumber(L, res.tm_yday);
-	lua_setfield(L, -2, "yearday");
-	lua_pushboolean(L, res.tm_isdst);
-	lua_setfield(L, -2, "is_dst");
+	pushtm(L, res);
 	return 1;
 }
 
@@ -1576,25 +1861,7 @@ static int Pgmtime(lua_State *L)		/** gmtime([time]) */
 	time_t t = luaL_optint(L, 1, time(NULL));
 	if (gmtime_r(&t, &res) == NULL)
 		return pusherror(L, "localtime");
-	lua_createtable(L, 0, 9);
-	lua_pushnumber(L, res.tm_sec);
-	lua_setfield(L, -2, "sec");
-	lua_pushnumber(L, res.tm_min);
-	lua_setfield(L, -2, "min");
-	lua_pushnumber(L, res.tm_hour);
-	lua_setfield(L, -2, "hour");
-	lua_pushnumber(L, res.tm_mday);
-	lua_setfield(L, -2, "monthday");
-	lua_pushnumber(L, res.tm_mon + 1);
-	lua_setfield(L, -2, "month");
-	lua_pushnumber(L, res.tm_year + 1900);
-	lua_setfield(L, -2, "year");
-	lua_pushnumber(L, res.tm_wday);
-	lua_setfield(L, -2, "weekday");
-	lua_pushnumber(L, res.tm_yday);
-	lua_setfield(L, -2, "yearday");
-	lua_pushboolean(L, res.tm_isdst);
-	lua_setfield(L, -2, "is_dst");
+	pushtm(L, res);
 	return 1;
 }
 
@@ -1619,8 +1886,8 @@ static int Pclock_getres(lua_State *L)		/** clock_getres([clockid]) */
 	const char *str = lua_tostring(L, 1);
 	if (clock_getres(get_clk_id_const(str), &res) == -1)
 		return pusherror(L, "clock_getres");
-	lua_pushnumber(L, res.tv_sec);
-	lua_pushnumber(L, res.tv_nsec);
+	lua_pushinteger(L, res.tv_sec);
+	lua_pushinteger(L, res.tv_nsec);
 	return 2;
 }
 
@@ -1630,8 +1897,8 @@ static int Pclock_gettime(lua_State *L)		/** clock_gettime([clockid]) */
 	const char *str = lua_tostring(L, 1);
 	if (clock_gettime(get_clk_id_const(str), &res) == -1)
 		return pusherror(L, "clock_gettime");
-	lua_pushnumber(L, res.tv_sec);
-	lua_pushnumber(L, res.tv_nsec);
+	lua_pushinteger(L, res.tv_sec);
+	lua_pushinteger(L, res.tv_nsec);
 	return 2;
 }
 #endif
@@ -1642,41 +1909,44 @@ static int Pstrftime(lua_State *L)		/** strftime(format, [time]) */
 	const char *format = luaL_checkstring(L, 1);
 
 	struct tm t;
-	if (lua_istable(L, 2)) {
-		lua_getfield(L, 2, "sec");
-		t.tm_sec = luaL_optint(L, -1, 0);
-		lua_pop(L, 1);
-		lua_getfield(L, 2, "min");
-		t.tm_min = luaL_optint(L, -1, 0);
-		lua_pop(L, 1);
-		lua_getfield(L, 2, "hour");
-		t.tm_hour = luaL_optint(L, -1, 0);
-		lua_pop(L, 1);
-		lua_getfield(L, 2, "monthday");
-		t.tm_mday = luaL_optint(L, -1, 0);
-		lua_pop(L, 1);
-		lua_getfield(L, 2, "month");
-		t.tm_mon = luaL_optint(L, -1, 0);
-		lua_pop(L, 1);
-		lua_getfield(L, 2, "year");
-		t.tm_year = luaL_optint(L, -1, 0);
-		lua_pop(L, 1);
-		lua_getfield(L, 2, "weekday");
-		t.tm_wday = luaL_optint(L, -1, 0);
-		lua_pop(L, 1);
-		lua_getfield(L, 2, "yearday");
-		t.tm_yday = luaL_optint(L, -1, 0);
-		lua_pop(L, 1);
-		lua_getfield(L, 2, "is_dst");
-		t.tm_isdst = lua_tointeger(L, -1);
-		lua_pop(L, 1);
-	} else {
+	if (lua_isnil(L, 2)) {
 		time_t now = time(NULL);
 		localtime_r(&now, &t);
+	} else {
+		totm(L, 2, &t);
 	}
 
 	strftime(tmp, sizeof(tmp), format, &t);
-	lua_pushlstring(L, tmp, strlen(tmp));
+	lua_pushstring(L, tmp);
+	return 1;
+}
+
+static int Pstrptime(lua_State *L)		/** tm, next = strptime(s, format) */
+{
+	struct tm t;
+	const char *s = luaL_checkstring(L, 1);
+	const char *fmt = luaL_checkstring(L, 2);
+	char *ret;
+
+	memset(&t, 0, sizeof(struct tm));
+	ret = strptime(s, fmt, &t);
+	if (ret) {
+		pushtm(L, t);
+		lua_pushinteger(L, ret - s);
+		return 2;
+	} else
+		return 0;
+}
+
+static int Pmktime(lua_State *L)		/** ctime = mktime(tm) */
+{
+	struct tm t;
+	time_t ret;
+	totm(L, 1, &t);
+	ret = mktime(&t);
+	if (ret == -1)
+		return 0;
+	lua_pushinteger(L, ret);
 	return 1;
 }
 
@@ -1785,39 +2055,43 @@ static int Pgetopt_long(lua_State *L)
 }
 
 
-/* fcntl */
-static int Pgetfl(lua_State* L)
-{
-	int fd=luaL_optint(L, 1, 0);
-	return pushresult(L, fcntl(fd, F_GETFL), "fcntl.getfl");
-}
-
-static int Psetfl(lua_State* L)
-{
-	int fd=luaL_optint(L, 1, 0);
-	int value=luaL_optint(L, 2, 0);
-	return pushresult(L, fcntl(fd, F_SETFL, value), "fcntl.setfl");
-}
-
 /* Signals */
 
 static lua_State *signalL;
 static int signalno;
+static unsigned signals;
+
+#define sigmacros_map \
+	MENTRY( _DFL ) \
+	MENTRY( _IGN )
 
 static const char *const Ssigmacros[] =
 {
-	"SIG_DFL", "SIG_ERR", "SIG_HOLD", "SIG_IGN", NULL
+#define MENTRY(_s) LPOSIX_STR_1(LPOSIX_SPLICE(_SIG, _s)),
+	sigmacros_map
+#undef MENTRY
+	NULL
 };
 
 static void (*Fsigmacros[])(int) =
 {
-	SIG_DFL, SIG_IGN, NULL
+#define MENTRY(_s) LPOSIX_SPLICE(SIG, _s),
+	sigmacros_map
+#undef MENTRY
+	NULL
 };
 
 static void sig_handle (lua_State *L, lua_Debug *ar) {
+	/* Block all signals until we have run the Lua signal handler */
+	sigset_t mask, oldmask;
+	sigfillset(&mask);
+	sigprocmask(SIG_SETMASK, &mask, &oldmask);
+
 	(void)ar;  /* unused arg. */
-	/* Get signal handlers table */
+
 	lua_sethook(L, NULL, 0, 0);
+
+	/* Get signal handlers table */
 	lua_pushlightuserdata(L, &signalL);
 	lua_rawget(L, LUA_REGISTRYINDEX);
 
@@ -1825,135 +2099,185 @@ static void sig_handle (lua_State *L, lua_Debug *ar) {
 	lua_pushinteger(L, signalno);
 	lua_gettable(L, -2);
 
-	/* Call handler with signal number */
-	lua_pushinteger(L, signalno);
-	lua_pcall(L, 1, 0, 0);
-	/* FIXME: Deal with error */
+	while (signals--) {
+		/* Call handler with signal number */
+		lua_pushinteger(L, signalno);
+		lua_pcall(L, 1, 0, 0);
+		/* FIXME: Deal with error */
+	}
+
+	/* Having run the Lua signal handler, restore original signal mask */
+	sigprocmask(SIG_SETMASK, &oldmask, NULL);
 }
 
 static void sig_postpone (int i) {
+	signals++; /* Increment signal counter in case signal is re-raised before handler is run. */
 	signalno = i;
 	lua_sethook(signalL, sig_handle, LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT, 1);
 }
 
-static int sig_action (lua_State *L)
+static int sig_handler_wrap (lua_State *L) {
+	int sig = luaL_checkinteger(L, lua_upvalueindex(1));
+	void (*handler)(int) = lua_touserdata(L, lua_upvalueindex(2));
+	handler(sig);
+	return 0;
+}
+
+static int Psignal (lua_State *L)		/** old_handler = signal(signum, handler) */
+/* N.B. Although this is the same API as signal(2), it uses sigaction for guaranteed semantics. */
 {
-	/* As newindex metamethod, we are passed (table, key, value) on Lua stack */
-	struct sigaction sa;
-	int sig = luaL_checkinteger(L, 2);
+	struct sigaction sa, oldsa;
+	int sig = luaL_checkinteger(L, 1), ret;
 	void (*handler)(int) = sig_postpone;
 
-	luaL_checktype(L, 1, LUA_TTABLE);
+        /* Check handler is OK */
+	switch (lua_type(L, 2)) {
+	case LUA_TNIL:
+	case LUA_TSTRING:
+		handler = Fsigmacros[luaL_checkoption(L, 2, "SIG_DFL", Ssigmacros)];
+		break;
+	case LUA_TFUNCTION:
+		if (lua_tocfunction(L, 2) == sig_handler_wrap) {
+			lua_getupvalue(L, 2, 1);
+			handler = lua_touserdata(L, -1);
+			lua_pop(L, 1);
+		}
+	}
 
-	/* Set Lua handler */
-	if (lua_type(L, 3) == LUA_TSTRING)
-		handler = Fsigmacros[luaL_checkoption(L, 3, "SIG_DFL", Ssigmacros)];
-	lua_rawset(L, 1);
-
-	/* Set up C signal handler */
+	/* Set up C signal handler, getting old handler */
 	sa.sa_handler = handler;
 	sa.sa_flags = 0;
-	sigemptyset(&sa.sa_mask);
-	sigaction(sig, &sa, 0);         /* XXX ignores errors */
+	sigfillset(&sa.sa_mask);
+	ret = sigaction(sig, &sa, &oldsa);
+	if (ret == -1)
+		return 0;
 
-	return 0;
+	/* Set Lua handler if necessary */
+	if (handler == sig_postpone) {
+		lua_pushlightuserdata(L, &signalL); /* We could use an upvalue, but we need this for sig_handle anyway. */
+		lua_rawget(L, LUA_REGISTRYINDEX);
+		lua_pushvalue(L, 1);
+		lua_pushvalue(L, 2);
+		lua_rawset(L, -3);
+		lua_pop(L, 1);
+	}
+
+	/* Push old handler as result */
+	if (oldsa.sa_handler == sig_postpone) {
+		lua_pushlightuserdata(L, &signalL);
+		lua_rawget(L, LUA_REGISTRYINDEX);
+		lua_pushvalue(L, 1);
+		lua_rawget(L, -2);
+	} else if (oldsa.sa_handler == SIG_DFL)
+		lua_pushstring(L, "SIG_DFL");
+	else if (oldsa.sa_handler == SIG_IGN)
+		lua_pushstring(L, "SIG_IGN");
+        else {
+		lua_pushinteger(L, sig);
+		lua_pushlightuserdata(L, oldsa.sa_handler);
+		lua_pushcclosure(L, sig_handler_wrap, 2);
+        }
+	return 1;
 }
 
 
 static const luaL_Reg R[] =
 {
-	{"_exit",		P_exit},
-	{"abort",		Pabort},
-	{"access",		Paccess},
-	{"basename",		Pbasename},
-	{"chdir",		Pchdir},
-	{"chmod",		Pchmod},
-	{"chown",		Pchown},
+#define MENTRY(_s) {LPOSIX_STR_1(_s), (_s)}
+	MENTRY( P_exit		),
+	MENTRY( Pabort		),
+	MENTRY( Paccess		),
+	MENTRY( Pbasename	),
+	MENTRY( Pchdir		),
+	MENTRY( Pchmod		),
+	MENTRY( Pchown		),
 #if defined (_XOPEN_REALTIME) && _XOPEN_REALTIME != -1
-	{"clock_getres",	Pclock_getres},
-	{"clock_gettime",	Pclock_gettime},
+	MENTRY( Pclock_getres	),
+	MENTRY( Pclock_gettime	),
 #endif
-	{"close",		Pclose},
+	MENTRY( Pclose		),
 #if _POSIX_VERSION >= 200112L
-	{"crypt",		Pcrypt},
+	MENTRY( Pcrypt		),
 #endif
-	{"ctermid",		Pctermid},
-	{"dirname",		Pdirname},
-	{"dir",			Pdir},
-	{"dup",         Pdup},
-	{"dup2",        Pdup2},
-	{"errno",		Perrno},
-	{"exec",		Pexec},
-	{"execp",		Pexecp},
-	{"fileno",		Pfileno},
-	{"files",		Pfiles},
-	{"fork",		Pfork},
-	{"getcwd",		Pgetcwd},
-	{"getenv",		Pgetenv},
-	{"getgroup",		Pgetgroup},
+	MENTRY( Pctermid	),
+	MENTRY( Pdirname	),
+	MENTRY( Pdir		),
+	MENTRY( Pdup		),
+	MENTRY( Pdup2		),
+	MENTRY( Perrno		),
+	MENTRY( Pexec		),
+	MENTRY( Pexecp		),
+	MENTRY( Pfcntl		),
+	MENTRY( Pfileno		),
+	MENTRY( Pfiles		),
+	MENTRY( Pfnmatch	),
+	MENTRY( Pfork		),
+	MENTRY( Pgetcwd		),
+	MENTRY( Pgetenv		),
+	MENTRY( Pgetgroup	),
 #if _POSIX_VERSION >= 200112L
-	{"getgroups",		Pgetgroups},
+	MENTRY( Pgetgroups	),
 #endif
-	{"getlogin",		Pgetlogin},
-	{"getopt_long",		Pgetopt_long},
-	{"getpasswd",		Pgetpasswd},
-	{"getpid",		Pgetpid},
-	{"getrlimit",		Pgetrlimit},
-	{"gettimeofday",	Pgettimeofday},
-	{"glob",		Pglob},
-	{"gmtime",		Pgmtime},
-	{"hostid",		Phostid},
-	{"isgraph",		Pisgraph},
-	{"isprint",		Pisprint},
-	{"kill",		Pkill},
-	{"link",		Plink},
-	{"localtime",		Plocaltime},
-	{"mkdir",		Pmkdir},
-	{"mkfifo",		Pmkfifo},
-	{"mkstemp",             Pmkstemp},
-	{"open",		Popen},
-	{"pathconf",		Ppathconf},
-	{"pipe",        Ppipe},
-	{"raise",		Praise},
-	{"read",		Pread},
-	{"readlink",		Preadlink},
-	{"rmdir",		Prmdir},
-	{"rpoll",		Ppoll},
-	{"set_errno",		Pset_errno},
-	{"setenv",		Psetenv},
-	{"setpid",		Psetpid},
-	{"setrlimit",		Psetrlimit},
-	{"sleep",		Psleep},
-	{"nanosleep",		Pnanosleep},
-	{"stat",		Pstat},
-	{"strftime",		Pstrftime},
-	{"sysconf",		Psysconf},
-	{"time",		Ptime},
-	{"times",		Ptimes},
-	{"ttyname",		Pttyname},
-	{"unlink",		Punlink},
-	{"umask",		Pumask},
-	{"uname",		Puname},
-	{"utime",		Putime},
-	{"wait",		Pwait},
-	{"write",		Pwrite},
+	MENTRY( Pgetlogin	),
+	MENTRY( Pgetopt_long	),
+	MENTRY( Pgetpasswd	),
+	MENTRY( Pgetpid		),
+	MENTRY( Pgetrlimit	),
+	MENTRY( Pgettimeofday	),
+	MENTRY( Pglob		),
+	MENTRY( Pgmtime		),
+	MENTRY( Phostid		),
+	MENTRY( Pisgraph	),
+	MENTRY( Pisprint	),
+	MENTRY( Pkill		),
+	MENTRY( Plink		),
+	MENTRY( Plocaltime	),
+	MENTRY( Pmkdir		),
+	MENTRY( Pmkfifo		),
+	MENTRY( Pmkstemp	),
+	MENTRY( Pmktime		),
+	MENTRY( Popen		),
+	MENTRY( Ppathconf	),
+	MENTRY( Ppipe		),
+	MENTRY( Praise		),
+	MENTRY( Pread		),
+	MENTRY( Preadlink	),
+	MENTRY( Prmdir		),
+	MENTRY( Prpoll		),
+	MENTRY( Ppoll		),
+	MENTRY( Pset_errno	),
+	MENTRY( Psetenv		),
+	MENTRY( Psetpid		),
+	MENTRY( Psetrlimit	),
+	MENTRY( Psignal		),
+	MENTRY( Psleep		),
+	MENTRY( Pnanosleep	),
+	MENTRY( Pstat		),
+	MENTRY( Pstrftime	),
+	MENTRY( Pstrptime	),
+	MENTRY( Psysconf	),
+	MENTRY( Ptime		),
+	MENTRY( Ptimes		),
+	MENTRY( Pttyname	),
+	MENTRY( Punlink		),
+	MENTRY( Pumask		),
+	MENTRY( Puname		),
+	MENTRY( Putime		),
+	MENTRY( Pwait		),
+	MENTRY( Pwrite		),
 
 #if _POSIX_VERSION >= 200112L
-	{"openlog",		Popenlog},
-	{"syslog",		Psyslog},
-	{"closelog",		Pcloselog},
-	{"setlogmask",		Psetlogmask},
+	MENTRY( Popenlog	),
+	MENTRY( Psyslog		),
+	MENTRY( Pcloselog	),
+	MENTRY( Psetlogmask	),
 #endif
-
-	/* fcntl */
-	{"getfl",		Pgetfl},
-	{"setfl",		Psetfl},
-
-	{NULL,			NULL}
+#undef MENTRY
+	{NULL,	NULL}
 };
 
-#define set_const(key, value)		\
-	lua_pushnumber(L, value);	\
+#define set_integer_const(key, value)	\
+	lua_pushinteger(L, value);	\
 	lua_setfield(L, -2, key)
 
 LUALIB_API int luaopen_posix_c (lua_State *L)
@@ -1965,182 +2289,187 @@ LUALIB_API int luaopen_posix_c (lua_State *L)
 
 	/* stdio.h constants */
 	/* Those that are omitted already have a Lua interface, or alternative. */
-	set_const("_IOFBF", _IOFBF);
-	set_const("_IOLBF", _IOLBF);
-	set_const("_IONBF", _IONBF);
-	set_const("BUFSIZ", BUFSIZ);
-	set_const("EOF", EOF);
-	set_const("FOPEN_MAX", FOPEN_MAX);
-	set_const("FILENAME_MAX", FILENAME_MAX);
+	set_integer_const( "_IOFBF",		_IOFBF		);
+	set_integer_const( "_IOLBF",		_IOLBF		);
+	set_integer_const( "_IONBF",		_IONBF		);
+	set_integer_const( "BUFSIZ",		BUFSIZ		);
+	set_integer_const( "EOF",		EOF		);
+	set_integer_const( "FOPEN_MAX",		FOPEN_MAX	);
+	set_integer_const( "FILENAME_MAX",	FILENAME_MAX	);
 
 	/* from unistd.h */
-	set_const("WNOHANG", WNOHANG);
-	set_const("O_NONBLOCK", O_NONBLOCK);
+	set_integer_const( "WNOHANG",		WNOHANG		);
+	set_integer_const( "O_NONBLOCK",	O_NONBLOCK	);
 
 	/* errno values */
-	set_const("E2BIG", E2BIG);
-	set_const("EACCES", EACCES);
-	set_const("EADDRINUSE", EADDRINUSE);
-	set_const("EADDRNOTAVAIL", EADDRNOTAVAIL);
-	set_const("EAFNOSUPPORT", EAFNOSUPPORT);
-	set_const("EAGAIN", EAGAIN);
-	set_const("EALREADY", EALREADY);
-	set_const("EBADF", EBADF);
-	set_const("EBADMSG", EBADMSG);
-	set_const("EBUSY", EBUSY);
-	set_const("ECANCELED", ECANCELED);
-	set_const("ECHILD", ECHILD);
-	set_const("ECONNABORTED", ECONNABORTED);
-	set_const("ECONNREFUSED", ECONNREFUSED);
-	set_const("ECONNRESET", ECONNRESET);
-	set_const("EDEADLK", EDEADLK);
-	set_const("EDESTADDRREQ", EDESTADDRREQ);
-	set_const("EDOM", EDOM);
-	set_const("EEXIST", EEXIST);
-	set_const("EFAULT", EFAULT);
-	set_const("EFBIG", EFBIG);
-	set_const("EHOSTUNREACH", EHOSTUNREACH);
-	set_const("EIDRM", EIDRM);
-	set_const("EILSEQ", EILSEQ);
-	set_const("EINPROGRESS", EINPROGRESS);
-	set_const("EINTR", EINTR);
-	set_const("EINVAL", EINVAL);
-	set_const("EIO", EIO);
-	set_const("EISCONN", EISCONN);
-	set_const("EISDIR", EISDIR);
-	set_const("ELOOP", ELOOP);
-	set_const("EMFILE", EMFILE);
-	set_const("EMLINK", EMLINK);
-	set_const("EMSGSIZE", EMSGSIZE);
-	set_const("ENAMETOOLONG", ENAMETOOLONG);
-	set_const("ENETDOWN", ENETDOWN);
-	set_const("ENETRESET", ENETRESET);
-	set_const("ENETUNREACH", ENETUNREACH);
-	set_const("ENFILE", ENFILE);
-	set_const("ENOBUFS", ENOBUFS);
-	set_const("ENODATA", ENODATA);
-	set_const("ENODEV", ENODEV);
-	set_const("ENOENT", ENOENT);
-	set_const("ENOEXEC", ENOEXEC);
-	set_const("ENOLCK", ENOLCK);
-	set_const("ENOMEM", ENOMEM);
-	set_const("ENOMSG", ENOMSG);
-	set_const("ENOPROTOOPT", ENOPROTOOPT);
-	set_const("ENOSPC", ENOSPC);
-	set_const("ENOSR", ENOSR);
-	set_const("ENOSTR", ENOSTR);
-	set_const("ENOSYS", ENOSYS);
-	set_const("ENOTCONN", ENOTCONN);
-	set_const("ENOTDIR", ENOTDIR);
-	set_const("ENOTEMPTY", ENOTEMPTY);
-	set_const("ENOTSOCK", ENOTSOCK);
-	set_const("ENOTSUP", ENOTSUP);
-	set_const("ENOTTY", ENOTTY);
-	set_const("ENXIO", ENXIO);
-	set_const("EOPNOTSUPP", EOPNOTSUPP);
-	set_const("EOVERFLOW", EOVERFLOW);
-	set_const("EPERM", EPERM);
-	set_const("EPIPE", EPIPE);
-	set_const("EPROTO", EPROTO);
-	set_const("EPROTONOSUPPORT", EPROTONOSUPPORT);
-	set_const("EPROTOTYPE", EPROTOTYPE);
-	set_const("ERANGE", ERANGE);
-	set_const("EROFS", EROFS);
-	set_const("ESPIPE", ESPIPE);
-	set_const("ESRCH", ESRCH);
-	set_const("ETIME", ETIME);
-	set_const("ETIMEDOUT", ETIMEDOUT);
-	set_const("ETXTBSY", ETXTBSY);
-	set_const("EWOULDBLOCK", EWOULDBLOCK);
-	set_const("EXDEV", EXDEV);
+#define MENTRY(_e) set_integer_const(LPOSIX_STR_1(LPOSIX_SPLICE(_E, _e)), LPOSIX_SPLICE(E, _e))
+	MENTRY( 2BIG		);
+	MENTRY( ACCES		);
+	MENTRY( ADDRINUSE	);
+	MENTRY( ADDRNOTAVAIL	);
+	MENTRY( AFNOSUPPORT	);
+	MENTRY( AGAIN		);
+	MENTRY( ALREADY		);
+	MENTRY( BADF		);
+	MENTRY( BADMSG		);
+	MENTRY( BUSY		);
+	MENTRY( CANCELED	);
+	MENTRY( CHILD		);
+	MENTRY( CONNABORTED	);
+	MENTRY( CONNREFUSED	);
+	MENTRY( CONNRESET	);
+	MENTRY( DEADLK		);
+	MENTRY( DESTADDRREQ	);
+	MENTRY( DOM		);
+	MENTRY( EXIST		);
+	MENTRY( FAULT		);
+	MENTRY( FBIG		);
+	MENTRY( HOSTUNREACH	);
+	MENTRY( IDRM		);
+	MENTRY( ILSEQ		);
+	MENTRY( INPROGRESS	);
+	MENTRY( INTR		);
+	MENTRY( INVAL		);
+	MENTRY( IO		);
+	MENTRY( ISCONN		);
+	MENTRY( ISDIR		);
+	MENTRY( LOOP		);
+	MENTRY( MFILE		);
+	MENTRY( MLINK		);
+	MENTRY( MSGSIZE		);
+	MENTRY( NAMETOOLONG	);
+	MENTRY( NETDOWN		);
+	MENTRY( NETRESET	);
+	MENTRY( NETUNREACH	);
+	MENTRY( NFILE		);
+	MENTRY( NOBUFS		);
+	MENTRY( NODATA		);
+	MENTRY( NODEV		);
+	MENTRY( NOENT		);
+	MENTRY( NOEXEC		);
+	MENTRY( NOLCK		);
+	MENTRY( NOMEM		);
+	MENTRY( NOMSG		);
+	MENTRY( NOPROTOOPT	);
+	MENTRY( NOSPC		);
+	MENTRY( NOSR		);
+	MENTRY( NOSTR		);
+	MENTRY( NOSYS		);
+	MENTRY( NOTCONN		);
+	MENTRY( NOTDIR		);
+	MENTRY( NOTEMPTY	);
+	MENTRY( NOTSOCK		);
+	MENTRY( NOTSUP		);
+	MENTRY( NOTTY		);
+	MENTRY( NXIO		);
+	MENTRY( OPNOTSUPP	);
+	MENTRY( OVERFLOW	);
+	MENTRY( PERM		);
+	MENTRY( PIPE		);
+	MENTRY( PROTO		);
+	MENTRY( PROTONOSUPPORT	);
+	MENTRY( PROTOTYPE	);
+	MENTRY( RANGE		);
+	MENTRY( ROFS		);
+	MENTRY( SPIPE		);
+	MENTRY( SRCH		);
+	MENTRY( TIME		);
+	MENTRY( TIMEDOUT	);
+	MENTRY( TXTBSY		);
+	MENTRY( WOULDBLOCK	);
+	MENTRY( XDEV		);
+#undef MENTRY
 
 	/* Signals */
-	set_const("SIGABRT", SIGABRT);
-	set_const("SIGALRM", SIGALRM);
-	set_const("SIGBUS", SIGBUS);
-	set_const("SIGCHLD", SIGCHLD);
-	set_const("SIGCONT", SIGCONT);
-	set_const("SIGFPE", SIGFPE);
-	set_const("SIGHUP", SIGHUP);
-	set_const("SIGILL", SIGILL);
-	set_const("SIGINT", SIGINT);
-	set_const("SIGKILL", SIGKILL);
-	set_const("SIGPIPE", SIGPIPE);
-	set_const("SIGQUIT", SIGQUIT);
-	set_const("SIGSEGV", SIGSEGV);
-	set_const("SIGSTOP", SIGSTOP);
-	set_const("SIGTERM", SIGTERM);
-	set_const("SIGTSTP", SIGTSTP);
-	set_const("SIGTTIN", SIGTTIN);
-	set_const("SIGTTOU", SIGTTOU);
-	set_const("SIGUSR1", SIGUSR1);
-	set_const("SIGUSR2", SIGUSR2);
-	set_const("SIGPOLL", SIGPOLL);
-	set_const("SIGPROF", SIGPROF);
-	set_const("SIGSYS", SIGSYS);
-	set_const("SIGTRAP", SIGTRAP);
-	set_const("SIGURG", SIGURG );
-	set_const("SIGVTALRM", SIGVTALRM);
-	set_const("SIGXCPU", SIGXCPU);
-	set_const("SIGXFSZ", SIGXFSZ);
-
+#define MENTRY(_e) set_integer_const(LPOSIX_STR_1(LPOSIX_SPLICE(_SIG, _e)), LPOSIX_SPLICE(SIG, _e))
+	MENTRY( ABRT	);
+	MENTRY( ALRM	);
+	MENTRY( BUS	);
+	MENTRY( CHLD	);
+	MENTRY( CONT	);
+	MENTRY( FPE	);
+	MENTRY( HUP	);
+	MENTRY( ILL	);
+	MENTRY( INT	);
+	MENTRY( KILL	);
+	MENTRY( PIPE	);
+	MENTRY( QUIT	);
+	MENTRY( SEGV	);
+	MENTRY( STOP	);
+	MENTRY( TERM	);
+	MENTRY( TSTP	);
+	MENTRY( TTIN	);
+	MENTRY( TTOU	);
+	MENTRY( USR1	);
+	MENTRY( USR2	);
+	MENTRY( SYS	);
+	MENTRY( TRAP	);
+	MENTRY( URG	);
+	MENTRY( VTALRM	);
+	MENTRY( XCPU	);
+	MENTRY( XFSZ	);
+#undef MENTRY
 
 #if _POSIX_VERSION >= 200112L
-	set_const("LOG_AUTH", LOG_AUTH);
-	set_const("LOG_AUTHPRIV", LOG_AUTHPRIV);
-	set_const("LOG_CRON", LOG_CRON);
-	set_const("LOG_DAEMON", LOG_DAEMON);
-	set_const("LOG_FTP", LOG_FTP);
-	set_const("LOG_KERN", LOG_KERN);
-	set_const("LOG_LOCAL0", LOG_LOCAL0);
-	set_const("LOG_LOCAL1", LOG_LOCAL1);
-	set_const("LOG_LOCAL2", LOG_LOCAL2);
-	set_const("LOG_LOCAL3", LOG_LOCAL3);
-	set_const("LOG_LOCAL4", LOG_LOCAL4);
-	set_const("LOG_LOCAL5", LOG_LOCAL5);
-	set_const("LOG_LOCAL6", LOG_LOCAL6);
-	set_const("LOG_LOCAL7", LOG_LOCAL7);
-	set_const("LOG_LPR", LOG_LPR);
-	set_const("LOG_MAIL", LOG_MAIL);
-	set_const("LOG_NEWS", LOG_NEWS);
-	set_const("LOG_SYSLOG", LOG_SYSLOG);
-	set_const("LOG_USER", LOG_USER);
-	set_const("LOG_UUCP", LOG_UUCP);
+#  define MENTRY(_e) set_integer_const(LPOSIX_STR_1(LPOSIX_SPLICE(_LOG, _e)), LPOSIX_SPLICE(LOG, _e))
+	MENTRY( _AUTH		);
+	MENTRY( _AUTHPRIV	);
+	MENTRY( _CRON		);
+	MENTRY( _DAEMON		);
+	MENTRY( _FTP		);
+	MENTRY( _KERN		);
+	MENTRY( _LOCAL0		);
+	MENTRY( _LOCAL1		);
+	MENTRY( _LOCAL2		);
+	MENTRY( _LOCAL3		);
+	MENTRY( _LOCAL4		);
+	MENTRY( _LOCAL5		);
+	MENTRY( _LOCAL6		);
+	MENTRY( _LOCAL7		);
+	MENTRY( _LPR		);
+	MENTRY( _MAIL		);
+	MENTRY( _NEWS		);
+	MENTRY( _SYSLOG		);
+	MENTRY( _USER		);
+	MENTRY( _UUCP		);
 
-	set_const("LOG_EMERG", LOG_EMERG);
-	set_const("LOG_ALERT", LOG_ALERT);
-	set_const("LOG_CRIT", LOG_CRIT);
-	set_const("LOG_ERR", LOG_ERR);
-	set_const("LOG_WARNING", LOG_WARNING);
-	set_const("LOG_NOTICE", LOG_NOTICE);
-	set_const("LOG_INFO", LOG_INFO);
-	set_const("LOG_DEBUG", LOG_DEBUG);
+	MENTRY( _EMERG		);
+	MENTRY( _ALERT		);
+	MENTRY( _CRIT		);
+	MENTRY( _ERR		);
+	MENTRY( _WARNING	);
+	MENTRY( _NOTICE		);
+	MENTRY( _INFO		);
+	MENTRY( _DEBUG		);
+#  undef MENTRY
 #endif
 
-	/* fcntl */
-	lua_newtable(L); /* fcntl functions */
+#define MENTRY(_e) set_integer_const(LPOSIX_STR_1(LPOSIX_SPLICE(_F, _e)), LPOSIX_SPLICE(F, _e))
+	MENTRY( _DUPFD	);
+	MENTRY( _GETFD	);
+	MENTRY( _SETFD	);
+	MENTRY( _GETFL	);
+	MENTRY( _SETFL	);
+	MENTRY( _GETLK	);
+	MENTRY( _SETLK	);
+	MENTRY( _SETLKW	);
+	MENTRY( _GETOWN	);
+	MENTRY( _SETOWN	);
+#undef MENTRY
 
-	lua_setfield(L, -2, "fcntl");
+	/* from fnmatch.h */
+#define MENTRY(_e) set_integer_const(LPOSIX_STR_1(LPOSIX_SPLICE(_FNM, _e)), LPOSIX_SPLICE(FNM, _e))
+	MENTRY( _PATHNAME	);
+	MENTRY( _NOESCAPE	);
+	MENTRY( _PERIOD		);
+#undef MENTRY
 
-
-	/* Signals table */
-	lua_newtable(L); /* Signals table */
-
-	/* Signals table's metatable */
-	lua_newtable(L);
-	lua_pushcfunction(L, sig_action);
-	lua_setfield(L, -2, "__newindex");
-	lua_setmetatable(L, -2);
-
-	/* Take a copy of the signals table to use in sig_action */
+	/* Signals table stored in registry for Psignal and sig_handle */
 	lua_pushlightuserdata(L, &signalL);
-	lua_pushvalue(L, -2);
+	lua_newtable(L);
 	lua_rawset(L, LUA_REGISTRYINDEX);
 
 	signalL = L; /* For sig_postpone */
-
-	/* Register signals table */
-	lua_setfield(L, -2, "signal");
 
 	return 1;
 }

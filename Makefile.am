@@ -29,8 +29,10 @@ HTML = curses.html lcurses_c.html
 
 LUATESTS =				\
 	$(srcdir)/tests-posix.lua	\
-	$(srcdir)/tests-fcntl.lua	\
 	$(srcdir)/tests-curses.lua
+
+LUNITTESTS=				\
+	$(srcdir)/tests-fcntl.lua
 
 ROCKSPEC = $(PACKAGE)-$(VERSION)-1.rockspec
 
@@ -40,9 +42,11 @@ $(ROCKSPEC): $(PACKAGE).rockspec dist
 EXTRA_DIST =				\
 	$(HTML)				\
 	$(LUATESTS)			\
+	$(LUNITTESTS)			\
 	make_lcurses_doc.pl		\
 	$(PACKAGE).rockspec.in		\
-	strlcpy.c
+	strlcpy.c			\
+	lua52compat.h
 
 DISTCLEANFILES = $(PACKAGE).rockspec
 
@@ -53,6 +57,7 @@ doc: $(HTML)
 
 check-local:
 	ls $(LUATESTS) | $(LUA_ENV) xargs -L 1 $(LUA)
+	ls $(LUNITTESTS) | $(LUA_ENV) xargs -L 1 lunit --interpreter $(LUA)
 
 show-funcs:
 	@echo "posix library:"
@@ -61,7 +66,6 @@ show-funcs:
 release: distcheck $(ROCKSPEC)
 	git diff --exit-code && \
 	git push && \
-	woger lua-l package=$(PACKAGE) package_name=$(PACKAGE_NAME) version="release $(VERSION)" description="`LUA_INIT= LUA_PATH='$(abs_srcdir)/?.rockspec.in' $(LUA) -l$(PACKAGE) -e 'print (description.summary)'`" notes=release-notes-$(VERSION)
+	woger lua,github package=$(PACKAGE) package_name=$(PACKAGE_NAME) version=$(VERSION) description="`LUA_INIT= LUA_PATH='$(abs_srcdir)/?.rockspec.in' $(LUA) -l$(PACKAGE) -e 'print (description.summary)'`" notes=release-notes-$(VERSION) dist_type="tar.gz" github_user=rrthomas && \
 	git tag -a -m "Release tag" v$(VERSION) && \
 	git push --tags
-	@cat release-notes-$(VERSION) && echo && echo "Now upload to LuaForge, and fix the download URL in and send the rockspec!"
