@@ -1,6 +1,6 @@
 /*
  * POSIX library for Lua 5.1, 5.2 & 5.3.
- * Copyright (C) 2013-2018 Gary V. Vaughan
+ * Copyright (C) 2013-2017 Gary V. Vaughan
  * Copyright (C) 2010-2013 Reuben Thomas <rrt@sc3d.org>
  * Copyright (C) 2008-2010 Natanael Copa <natanael.copa@gmail.com>
  * Clean up and bug fixes by Leo Razoumov <slonik.az@gmail.com> 2006-10-11
@@ -72,6 +72,8 @@
 #if LUA_VERSION_NUM == 502 || LUA_VERSION_NUM == 503
 #  define lua_objlen lua_rawlen
 #  define lua_strlen lua_rawlen
+#  define luaL_openlib(L,n,l,nup) luaL_setfuncs((L),(l),(nup))
+#  define luaL_register(L,n,l) (luaL_newlib(L,l))
 #endif
 
 #define _LPOSIX_VERSION_STRING(m) 					\

@@ -4,7 +4,7 @@ luaposix
 By the [luaposix project][github]
 
 [![License](http://img.shields.io/:license-mit-blue.svg)](http://mit-license.org)
-[![travis-ci status](https://secure.travis-ci.org/luaposix/luaposix.png?branche=release-v34.0.4)](http://travis-ci.org/luaposix/luaposix/builds)
+[![travis-ci status](https://secure.travis-ci.org/luaposix/luaposix.png?branche=master)](http://travis-ci.org/luaposix/luaposix/builds)
 [![Stories in Ready](https://badge.waffle.io/luaposix/luaposix.png?label=ready&title=Ready)](https://waffle.io/luaposix/luaposix)
 
 This is a POSIX binding for LuaJIT, [Lua][] 5.1, 5.2 and 5.3; like most
@@ -119,27 +119,15 @@ points when proposing changes:
 0. Follow existing code. There are a lot of useful patterns and
    avoided traps there.
 
-1. 8-character indentation using TABs in C sources; 3-character
+1. 8-character indentation using TABs in C sources; 2-character
    indentation using SPACEs in Lua sources.
 
-2. Simple strings are easiest to type using single-quote delimiters
-   saving double-quotes for where a string contains apostrophes.
-
-3. Save horizontal space by only using SPACEs where the parser requires
-   them.
-
-4. Use vertical space to separate out compound statements to help the
-   coverage reports discover untested lines.
-
-5. Prefer explicit string function calls over object methods, to mitigate
-   issues with monkey-patching in caller environment. 
-
-6. No non-POSIX APIs; no platform-specific code. When wrapping APIs
+2. No non-POSIX APIs; no platform-specific code. When wrapping APIs
    introduced in POSIX 2001 or later, add an appropriate #if. If your
    platform isn't quite POSIX, you may find a gnulib module to bridge
    the gap. If absolutely necessary, use luke feature tests.
 
-7. Thin wrappers: although some existing code contradicts this, wrap
+3. Thin wrappers: although some existing code contradicts this, wrap
    POSIX APIs in the simplest way possible. If necessary, more
    convenient wrappers can be added in Lua (posix.lua).
 

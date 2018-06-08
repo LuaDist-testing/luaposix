@@ -1,6 +1,6 @@
 /*
  * POSIX library for Lua 5.1, 5.2 & 5.3.
- * Copyright (C) 2013-2018 Gary V. Vaughan
+ * Copyright (C) 2013-2017 Gary V. Vaughan
  * Copyright (C) 2010-2013 Reuben Thomas <rrt@sc3d.org>
  * Copyright (C) 2008-2010 Natanael Copa <natanael.copa@gmail.com>
  * Clean up and bug fixes by Leo Razoumov <slonik.az@gmail.com> 2006-10-11
@@ -173,7 +173,7 @@ the symbolic name of the constant (from `/usr/include/errno.h` or equivalent).
 LUALIB_API int
 luaopen_posix_errno(lua_State *L)
 {
-	luaL_newlib(L, posix_errno_fns);
+	luaL_register(L, "posix.errno", posix_errno_fns);
 	lua_pushstring(L, LPOSIX_VERSION_STRING("errno"));
 	lua_setfield(L, -2, "version");
 

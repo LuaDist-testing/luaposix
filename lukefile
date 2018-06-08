@@ -33,7 +33,7 @@ ldocs    = 'build-aux/config.ld.in'
 
 modules  = {
    ['posix']               = 'lib/posix/init.lua',
-   ['posix._base']         = 'lib/posix/_base.lua',
+   ['posix._argcheck']     = 'lib/posix/_argcheck.lua',
    ['posix.compat']        = 'lib/posix/compat.lua',
    ['posix.deprecated']    = 'lib/posix/deprecated.lua',
    ['posix.sys']           = 'lib/posix/sys.lua',
@@ -100,7 +100,7 @@ modules  = {
    ['posix.time']          = {
       libraries = {
          {
-            ifdef          = '_POSIX_TIMERS',
+            ifdef          = '_XOPEN_REALTIME',
             include        = 'unistd.h',
             checksymbol    = 'clock_gettime',
             library        = 'rt',
